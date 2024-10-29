@@ -1,5 +1,5 @@
 """
-Entity Matching Axiom Generator.
+Entity matching axiom generator module.
 
 This module provides an axiom generation functionality for entity matching
 tasks.
@@ -11,7 +11,7 @@ import tensorflow as tf
 
 
 class AxiomGenerator:
-    """Axiom Generator Class.
+    """Axiom generator class.
 
     The class provides an axiom generator for entity matching tasks.
     """

@@ -1,5 +1,5 @@
 """
-Record network.
+Record pair network module.
 
 This module contains functionality for instantiating, training, and using a record
 matching network.
@@ -10,8 +10,8 @@ from neer_match.similarity_map import SimilarityMap
 import tensorflow as tf
 
 
-class RecordNetwork(tf.keras.Model):
-    """Record Network Class.
+class RecordPairNetwork(tf.keras.Model):
+    """Record network class.
 
     The class creates networks for matching records from two datasets.
     """
@@ -53,7 +53,7 @@ class RecordNetwork(tf.keras.Model):
         if isinstance(feature_depths, int):
             feature_depths = [feature_depths] * no_assoc
 
-        super(RecordNetwork, self).__init__(**kwargs)
+        super(RecordPairNetwork, self).__init__(**kwargs)
 
         self.field_networks = []
         for i, name in enumerate(similarity_map.association_names()):

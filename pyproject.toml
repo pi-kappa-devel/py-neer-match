@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "neer-match"
-version = "0.7.0"
+dynamic = ["version"]
 authors = [
     { name="Pantelis Karapanagiotis", email="pikappa.devel@gmail.com" },
     { name="Marius Liebald", email="maliedvp@gmail.com" }]
@@ -32,6 +32,9 @@ classifiers = [
 "Documentation" = "https://neer-match.readthedocs.io/en/latest/"
 "Source Code" = "https://github.com/pi-kappa-devel/neer-match"
 "Bug Tracker" = "https://github.com/pi-kappa-devel/neer-match/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "neer_match.__version__"}
 
 [project.optional-dependencies]
 tests = ['pytest']

@@ -1,5 +1,5 @@
 """
-Similarity Encoding.
+Similarity encoding module.
 
 The module provides functionality to store and manage a similarity encoders.
 """
@@ -45,7 +45,7 @@ def available_similarities():
 
 
 class SimilarityEncoder:
-    """Similarity Encoder Class.
+    """Similarity encoder class.
 
     The class creates a similarity encoder from a similarity map. It can
     be used to encode pairs of records from two datasets.

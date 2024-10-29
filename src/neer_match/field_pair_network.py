@@ -1,5 +1,5 @@
 """
-Field Pair Network.
+Field pair network module.
 
 This module contains functionality for instantiating, training, and using a field pair
 matching networks.
@@ -9,7 +9,7 @@ import tensorflow as tf
 
 
 class FieldPairNetwork(tf.keras.Model):
-    """Field Pair Network Class.
+    """Field pair network class.
 
     The class creates networks for matching pairs of fields from two datasets.
     """

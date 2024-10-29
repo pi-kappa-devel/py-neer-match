@@ -1,5 +1,5 @@
 """
-Similarity Mappings.
+Similarity mappings module.
 
 The module provides functionality to store and manage a similarity mappings
 between records of two datasets.
@@ -10,7 +10,7 @@ import numpy
 
 class SimilarityMap:
     """
-    Similarity Map Class.
+    Similarity map class.
 
     The class stores a collection of associations between the records of two
     datasets.

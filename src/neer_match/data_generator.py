@@ -1,5 +1,5 @@
 """
-Entity Matching Data Generator.
+Entity matching data generator module.
 
 This module provides a data generation functionality for entity matching
 tasks.
@@ -12,7 +12,7 @@ import tensorflow as tf
 
 
 class DataGenerator(tf.keras.utils.Sequence):
-    """Data Generator Class.
+    """Data generator class.
 
     The class provides a data generator for entity matching tasks.
     """
@@ -44,7 +44,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             raise ValueError("Input mismatch_share must be a float in [0, 1].")
         if not isinstance(shuffle, bool):
             raise ValueError("Input shuffle must be a boolean.")
-        # The similarity_map is check in SimilarityEncoder and RecordNetwork.
+        # The similarity_map is check in SimilarityEncoder and RecordPairNetwork.
 
         super(DataGenerator, self).__init__()
         self.left = left

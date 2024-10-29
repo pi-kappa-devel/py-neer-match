@@ -1,5 +1,5 @@
 """
-Matching models.
+Matching models module.
 
 This module contains functionality for instantiating, training, and evaluating
 deep learning and neuro-symbolic matching models
@@ -7,14 +7,14 @@ deep learning and neuro-symbolic matching models
 
 from neer_match.axiom_generator import AxiomGenerator
 from neer_match.data_generator import DataGenerator
-from neer_match.record_network import RecordNetwork
+from neer_match.record_pair_network import RecordPairNetwork
 import pandas
 import tensorflow as tf
 
 
 def _suggest(model, left, right, count, batch_size, **kwargs):
     generator = DataGenerator(
-        model.record_network.similarity_map,
+        model.record_pair_network.similarity_map,
         left,
         right,
         mismatch_share=1.0,
@@ -54,7 +54,7 @@ class DLMatchingModel(tf.keras.Model):
     ):
         """Initialize a deep learning matching model."""
         super(DLMatchingModel, self).__init__(**kwargs)
-        self.record_network = RecordNetwork(
+        self.record_pair_network = RecordPairNetwork(
             similarity_map,
             initial_feature_width_scales=initial_feature_width_scales,
             feature_depths=feature_depths,
@@ -64,7 +64,7 @@ class DLMatchingModel(tf.keras.Model):
 
     def call(self, inputs):
         """Call the model on inputs."""
-        return self.record_network(inputs)
+        return self.record_pair_network(inputs)
 
     def fit(self, left, right, matches, **kwargs):
         """Fit the model."""
@@ -73,7 +73,7 @@ class DLMatchingModel(tf.keras.Model):
             if key in kwargs:
                 dg_kwargs[key] = kwargs.pop(key)
         generator = DataGenerator(
-            self.record_network.similarity_map, left, right, matches, **dg_kwargs
+            self.record_pair_network.similarity_map, left, right, matches, **dg_kwargs
         )
 
         return super(DLMatchingModel, self).fit(generator, **kwargs)
@@ -81,7 +81,7 @@ class DLMatchingModel(tf.keras.Model):
     def evaluate(self, left, right, matches, **kwargs):
         """Evaluate the model."""
         generator = DataGenerator(
-            self.record_network.similarity_map,
+            self.record_pair_network.similarity_map,
             left,
             right,
             matches,
@@ -97,7 +97,7 @@ class DLMatchingModel(tf.keras.Model):
     def predict(self, left, right, **kwargs):
         """Generate model predictions."""
         generator = DataGenerator(
-            self.record_network.similarity_map,
+            self.record_pair_network.similarity_map,
             left,
             right,
             mismatch_share=1.0,
@@ -112,7 +112,7 @@ class DLMatchingModel(tf.keras.Model):
     @property
     def similarity_map(self):
         """Similarity Map of the Model."""
-        return self.record_network.similarity_map
+        return self.record_pair_network.similarity_map
 
 
 class LTNMatchingModel:
@@ -127,7 +127,7 @@ class LTNMatchingModel:
         record_depth=4,
     ):
         """Initialize a logic tensor network matching learning matching model."""
-        self.record_network = RecordNetwork(
+        self.record_pair_network = RecordPairNetwork(
             similarity_map,
             initial_feature_width_scales=initial_feature_width_scales,
             feature_depths=feature_depths,
@@ -145,18 +145,18 @@ class LTNMatchingModel:
         self.optimizer = optimizer
         features = [
             tf.random.normal((1, size), dtype=tf.float32)
-            for size in self.record_network.similarity_map.association_sizes()
+            for size in self.record_pair_network.similarity_map.association_sizes()
         ]
-        self.record_network(features)
+        self.record_pair_network(features)
 
     def __make_axioms(self, data_generator):
         axiom_generator = AxiomGenerator(data_generator)
 
         @tf.function
         def axioms():
-            matching_axioms = axiom_generator.matching_axioms(self.record_network)
+            matching_axioms = axiom_generator.matching_axioms(self.record_pair_network)
             non_matching_axioms = axiom_generator.non_matching_axioms(
-                self.record_network
+                self.record_pair_network
             )
             axioms = matching_axioms + non_matching_axioms
             kb = axiom_generator.FormAgg(axioms)
@@ -185,7 +185,7 @@ class LTNMatchingModel:
                 pb = "=" * pb_step + "." * (pb_size - pb_step)
                 print(f"\r[{pb}] {i + 1}/{no_batches}", end="", flush=True)
             with tf.GradientTape() as tape:
-                preds = self.record_network(features)
+                preds = self.record_pair_network(features)
                 preds = tf.reshape(preds, preds.shape[0])
                 tp = tp + tf.reduce_sum(tf.round(preds) * labels)
                 fp = fp + tf.reduce_sum(tf.round(preds) * (1.0 - labels))
@@ -216,11 +216,11 @@ class LTNMatchingModel:
     ):
         """Fit the model."""
         data_generator = DataGenerator(
-            self.record_network.similarity_map, left, right, matches, **kwargs
+            self.record_pair_network.similarity_map, left, right, matches, **kwargs
         )
         axioms = self.__make_axioms(data_generator)
         axioms()  # Ensure that the underlying network is built
-        trainable_variables = self.record_network.trainable_variables
+        trainable_variables = self.record_pair_network.trainable_variables
 
         if verbose > 0:
             print(
@@ -253,7 +253,7 @@ class LTNMatchingModel:
     def evaluate(self, left, right, matches, batch_size=32, satisfiability_weight=0.5):
         """Evaluate the model."""
         data_generator = DataGenerator(
-            self.record_network.similarity_map,
+            self.record_pair_network.similarity_map,
             left,
             right,
             matches,
@@ -263,7 +263,7 @@ class LTNMatchingModel:
         )
         axioms = self.__make_axioms(data_generator)
         axioms()  # Ensure that the underlying network is built
-        trainable_variables = self.record_network.trainable_variables
+        trainable_variables = self.record_pair_network.trainable_variables
 
         loss1, loss2, tp, fp, tn, fn = self.__for_epoch(
             data_generator,
@@ -285,17 +285,17 @@ class LTNMatchingModel:
 
     def predict_from_generator(self, generator):
         """Generate model predictions from a generator."""
-        preds = self.record_network(generator[0][0])
+        preds = self.record_pair_network(generator[0][0])
         for i, (features, labels) in enumerate(generator):
             if i == 0:
                 continue
-            preds = tf.concat([preds, self.record_network(features)], axis=0)
+            preds = tf.concat([preds, self.record_pair_network(features)], axis=0)
         return preds
 
     def predict(self, left, right, batch_size=32):
         """Generate model predictions."""
         generator = DataGenerator(
-            self.record_network.similarity_map,
+            self.record_pair_network.similarity_map,
             left,
             right,
             mismatch_share=1.0,
@@ -311,4 +311,4 @@ class LTNMatchingModel:
     @property
     def similarity_map(self):
         """Similarity Map of the Model."""
-        return self.record_network.similarity_map
+        return self.record_pair_network.similarity_map
