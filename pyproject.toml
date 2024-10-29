@@ -1,9 +1,9 @@
 [build-system]
 requires = [
-    # "numpy",
-    # "pandas",
-    # "rapidfuzz",
-    # "tensorflow",
+    "numpy",
+    "pandas",
+    "rapidfuzz",
+    "tensorflow",
     "setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
