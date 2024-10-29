@@ -1,0 +1,49 @@
+[build-system]
+requires = [
+    # "numpy",
+    # "pandas",
+    # "rapidfuzz",
+    # "tensorflow",
+    "setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neer-match"
+version = "0.7.0"
+authors = [
+    { name="Pantelis Karapanagiotis", email="pikappa.devel@gmail.com" },
+    { name="Marius Liebald", email="maliedvp@gmail.com" }]
+description = "NEuro-symbolic Entity Reasoning and Matching"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"]
+
+[project.urls]
+"Homepage" = "https://neer-match.pikappa.eu/"
+"Documentation" = "https://neer-match.readthedocs.io/en/latest/"
+"Source Code" = "https://github.com/pi-kappa-devel/neer-match"
+"Bug Tracker" = "https://github.com/pi-kappa-devel/neer-match/issues"
+
+[project.optional-dependencies]
+tests = ['pytest']
+
+[tool.setuptools.package-data]
+"neer_match.examples.data" = ["*.csv"]
+
+[build_sphinx]
+builders = ["html", "man"]
+all_files = 1
+build_dir = "build"
+source_dir = "docs/source"
+
+[lint]
+lint_enable = "spelling"
