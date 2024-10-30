@@ -3,18 +3,21 @@
 <img src="docs/source/_static/img/hex-logo.png" align="right" height="192"/>
 NEurosymbolic Entity Reasoning and Matching.
 
-## Development notes
+# Development Notes
 To build and install the package locally, from the project's root path, execute
 ```bash
 python -m build && \
 	python -m pip install dist/$(basename `ls -Art dist | tail -n 1` -py3-none-any.whl).tar.gz
 ```
 
-### Documentation
+## Documentation
 Make sure to build and install the package with the latest modifications before building the documentation. The build the documentation, from `<project-root>/docs`, execute 
 ```bash
-make
+make html
 ```
+
+## Logo
+The logo was designed using [Microsoft Designer](https://designer.microsoft.com/) and [GNU Image Manipulation Program (GIMP)](https://www.gimp.org/). The hexagon version of the logo was generated with the R package [hexSticker](https://github.com/GuangchuangYu/hexSticker). It uses the [Philosopher](https://fonts.google.com/specimen/Philosopher) font.
 
 # Contributors
 
