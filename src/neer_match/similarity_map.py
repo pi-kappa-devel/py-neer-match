@@ -24,7 +24,10 @@ class SimilarityMap:
             if not isinstance(key, str):
                 raise ValueError("Association key must be a string.")
             if not isinstance(value, list):
-                raise ValueError("Association values must be a list.")
+                raise ValueError(
+                    "Association values must be a list. "
+                    f"Instead got type {type(value)}."
+                )
         self.instructions = instructions
         self.lcols = []
         self.rcols = []
