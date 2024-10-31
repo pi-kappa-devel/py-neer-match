@@ -53,7 +53,7 @@ class RecordPairNetwork(tf.keras.Model):
         if isinstance(feature_depths, int):
             feature_depths = [feature_depths] * no_assoc
 
-        super(RecordPairNetwork, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.field_networks = []
         for i, name in enumerate(similarity_map.association_names()):
@@ -98,11 +98,29 @@ class RecordPairNetwork(tf.keras.Model):
         )
         return config
 
+    def build(self, input_shapes):
+        """Build the network."""
+        field_output_shapes = []
+        if isinstance(input_shapes, dict):
+            input_shapes = list(input_shapes.values())
+
+        for i, input_shape in enumerate(input_shapes):
+            self.field_networks[i].build(input_shape)
+            field_output_shapes.append((input_shape[0], 1))
+        self.concat.build(field_output_shapes)
+        input_shapes = self.concat.compute_output_shape(field_output_shapes)
+        for layer in self.record_layers:
+            layer.build(input_shapes)
+            input_shapes = (input_shapes[0], layer.units)
+        super().build(input_shapes)
+
     def call(self, inputs):
         """Run the network on input."""
+        if isinstance(inputs, dict):
+            inputs = list(inputs.values())
         outputs = []
-        for i, layer in enumerate(self.field_networks):
-            outputs.append(layer(inputs[i]))
+        for i, x in enumerate(inputs):
+            outputs.append(self.field_networks[i](x))
         output = self.concat(outputs)
         for layer in self.record_layers:
             output = layer(output)

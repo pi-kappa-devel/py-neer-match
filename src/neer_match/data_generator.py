@@ -46,7 +46,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             raise ValueError("Input shuffle must be a boolean.")
         # The similarity_map is check in SimilarityEncoder and RecordPairNetwork.
 
-        super(DataGenerator, self).__init__()
+        super().__init__()
         self.left = left
         self.right = right
         self.matches = matches
@@ -165,8 +165,15 @@ class DataGenerator(tf.keras.utils.Sequence):
         lpos, rpos = self.__side_indices(indices)
 
         features = self.similarity_encoder(self.left.iloc[lpos], self.right.iloc[rpos])
-        labels = self.__labels(lpos, rpos)
+        features = {
+            key: features[i]
+            for i, key in enumerate(self.similarity_map.association_names())
+        }
 
+        if self.matches is None:
+            return features
+
+        labels = self.__labels(lpos, rpos)
         return features, labels
 
     def on_epoch_end(self):
@@ -182,6 +189,6 @@ class DataGenerator(tf.keras.utils.Sequence):
             f"Batch size[{self.batch_size}]",
             f"No Pairs[{self.no_pairs()}]",
             f"No Matches[{self.no_matches()}]",
-            f"No Mismatches[{self.no_mismatches()}]"
+            f"No Mismatches[{self.no_mismatches()}]",
         ]
         return f"{self.__class__.__name__}[\n  {'\n  '.join(items)}]"

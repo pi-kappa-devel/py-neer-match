@@ -50,10 +50,12 @@ class AxiomGenerator:
         ]
         return consts
 
+    @tf.autograph.experimental.do_not_convert
     def field_matching_constants(self):
         """Return field matching constants."""
         return self.__select_field_constants(1.0)
 
+    @tf.autograph.experimental.do_not_convert
     def field_non_matching_constants(self):
         """Return field non matching constants."""
         return self.__select_field_constants(0.0)

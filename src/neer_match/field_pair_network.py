@@ -26,7 +26,7 @@ class FieldPairNetwork(tf.keras.Model):
         self.size = size
         self.initial_width_scale = initial_width_scale
         self.depth = depth
-        super(FieldPairNetwork, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.field_layers = []
         for i in range(depth):
@@ -56,6 +56,13 @@ class FieldPairNetwork(tf.keras.Model):
             }
         )
         return config
+
+    def build(self, input_shape):
+        """Build the network."""
+        for layer in self.field_layers:
+            layer.build(input_shape)
+            input_shape = (input_shape[0], layer.units)
+        super().build(input_shape)
 
     def call(self, inputs):
         """Run the network on input."""
