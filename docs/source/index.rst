@@ -12,6 +12,8 @@ documentation for details.
    axiom_generator
    data_generator
    field_pair_network
+   global_explainability
+   local_explainability
    matching_model
    record_pair_network
    similarity_encoding

@@ -36,25 +36,22 @@ html_static_path = ['_static']
 
 html_logo = "_static/img/logo.png"
 html_theme_options = {
-    'logo_only': True,
     'github_user': 'pi-kappa-devel',
     'github_repo': 'neer-match',
     'github_banner': True,
     'github_button': True,
     'github_type': 'star',
     'github_count': True,
-    'github_url': 'https://github.com/pi-kappa-devel/neer-match',
     'show_powered_by': True,
     'show_related': True,
     'note_bg': '#ffffff',
     'note_border': '#c8c8c8',
     'fixed_sidebar': True,
     'extra_nav_links': {
-        '📚': 'https://neer-match.pikappa.eu/',
-        '📦': 'https://pypi.org/project/neer-match/',
+        '📦 Python Package': 'https://pypi.org/project/neer-match/',
+        '📦 R Version': 'https://github.com/pi-kappa-devel/r-neer-match'
     }
 }
 
 
 html_favicon = "_static/img/favicon/favicon.ico"
-
