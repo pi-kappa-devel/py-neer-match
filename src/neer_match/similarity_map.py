@@ -69,7 +69,7 @@ class SimilarityMap:
         """
         return sum(
             [
-                [f"{k.replace("~", "_")}_{s}" for s in v]
+                [f"{k.replace('~', '_')}_{s}" for s in v]
                 for k, v in self.instructions.items()
             ],
             [],

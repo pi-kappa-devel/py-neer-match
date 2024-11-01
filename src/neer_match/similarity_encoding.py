@@ -55,7 +55,7 @@ class SimilarityEncoder:
         """Initialize a similarity encoder object."""
         if not isinstance(similarity_map, SimilarityMap):
             raise ValueError(
-                "Input similarity_map must be an instance of SimilarityMap."
+                "Input similarity_map must be an instance of SimilarityMap. "
                 f"Instead got {type(similarity_map)}"
             )
         self.similarity_map = similarity_map

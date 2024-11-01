@@ -3,6 +3,12 @@
 <img src="docs/source/_static/img/hex-logo.png" align="right" height="192"/>
 NEurosymbolic Entity Reasoning and Matching.
 
+# Features
+
+## Auxiliary Features
+In addition, the package offers explainability functionality customized for the needs of matching problems. The default explainability behavior is built on the information provided by the similarity map. In particular, the package can be used to calculate
+- partial matching dependencies on similarities.
+
 # Documentation
 Documentation is available for the latest version of the package [online]()
 

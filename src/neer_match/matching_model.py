@@ -236,8 +236,8 @@ class LTNMatchingModel:
 
         if verbose > 0:
             print(
-                f"| {"Epoch":<10} | {"Loss":<10} | {"Rec":<10} | {"Prec":<10} "
-                f"| {"F1":<10} | {"Sat":<10} |"
+                f"| {'Epoch':<10} | {'Loss':<10} | {'Rec':<10} | {'Prec':<10} "
+                f"| {'F1':<10} | {'Sat':<10} |"
             )
         for epoch in range(epochs):
             loss1, loss2, tp, fp, tn, fn = self.__for_epoch(

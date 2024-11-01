@@ -183,12 +183,14 @@ class DataGenerator(tf.keras.utils.Sequence):
 
     def __str__(self):
         """Return a string representation of the data generator."""
-        items = [
-            self.similarity_map.__str__().replace("\n", "\n  "),
-            f"No Batches[{self.no_batches}]",
-            f"Batch size[{self.batch_size}]",
-            f"No Pairs[{self.no_pairs()}]",
-            f"No Matches[{self.no_matches()}]",
-            f"No Mismatches[{self.no_mismatches()}]",
-        ]
-        return f"{self.__class__.__name__}[\n  {'\n  '.join(items)}]"
+        items = "\n  ".join(
+            [
+                self.similarity_map.__str__().replace("\n", "\n  "),
+                f"No Batches[{self.no_batches}]",
+                f"Batch size[{self.batch_size}]",
+                f"No Pairs[{self.no_pairs()}]",
+                f"No Matches[{self.no_matches()}]",
+                f"No Mismatches[{self.no_mismatches()}]",
+            ]
+        )
+        return f"{self.__class__.__name__}[\n  {items}]"
