@@ -3,6 +3,9 @@
 <img src="docs/source/_static/img/hex-logo.png" align="right" height="192"/>
 NEurosymbolic Entity Reasoning and Matching.
 
+# Documentation
+Documentation is available for the latest version of the package [online]()
+
 # Development Notes
 To build and install the package locally, from the project's root path, execute
 ```bash
