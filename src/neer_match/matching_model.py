@@ -150,11 +150,10 @@ class LTNMatchingModel:
 
     def compile(
         self,
-        loss=tf.keras.losses.BinaryCrossentropy(),
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
     ):
         """Compile the model."""
-        self.loss1 = loss
+        self.bce = tf.keras.losses.BinaryCrossentropy()
         self.optimizer = optimizer
         features = [
             tf.random.normal((1, size), dtype=tf.float32)
@@ -181,8 +180,7 @@ class LTNMatchingModel:
     def __for_epoch(
         self,
         data_generator,
-        satisfiability_weight,
-        axioms,
+        loss_clb,
         trainable_variables,
         verbose=1,
     ):
@@ -192,6 +190,9 @@ class LTNMatchingModel:
         fp = 0
         tn = 0
         fn = 0
+        bce = 0
+        sat = 0
+        loss = 0
         for i, (features, labels) in enumerate(data_generator):
             if verbose > 0:
                 pb_step = int((i + 1) / no_batches * pb_size)
@@ -199,22 +200,36 @@ class LTNMatchingModel:
                 print(f"\r[{pb}] {i + 1}/{no_batches}", end="", flush=True)
             with tf.GradientTape() as tape:
                 preds = self.record_pair_network(features)
-                preds = tf.reshape(preds, preds.shape[0])
-                tp = tp + tf.reduce_sum(tf.round(preds) * labels)
-                fp = fp + tf.reduce_sum(tf.round(preds) * (1.0 - labels))
-                tn = tn + tf.reduce_sum((1.0 - tf.round(preds)) * (1.0 - labels))
-                fn = fn + tf.reduce_sum((1.0 - tf.round(preds)) * labels)
-                loss1 = self.loss1(labels, preds)
-                loss2 = 1.0 - axioms()
-                loss = (
-                    satisfiability_weight * loss1 + (1 - satisfiability_weight) * loss2
-                )
-            grads = tape.gradient(loss, trainable_variables)
+                batch_loss, batch_bce, batch_sat = loss_clb(labels, preds)
+            grads = tape.gradient(batch_loss, trainable_variables)
             self.optimizer.apply_gradients(zip(grads, trainable_variables))
+
+            preds = tf.reshape(preds, preds.shape[0])
+            tp = tp + tf.reduce_sum(tf.round(preds) * labels)
+            fp = fp + tf.reduce_sum(tf.round(preds) * (1.0 - labels))
+            tn = tn + tf.reduce_sum((1.0 - tf.round(preds)) * (1.0 - labels))
+            fn = fn + tf.reduce_sum((1.0 - tf.round(preds)) * labels)
+            bce = bce + batch_bce
+            sat = sat + batch_sat
+            loss = loss + batch_loss
         if verbose > 0:
             print("\r", end="", flush=True)
 
-        return loss1, loss2, tp, fp, tn, fn
+        return loss, bce, sat / len(data_generator), tp, fp, tn, fn
+
+    def __make_loss(self, satisfiability_weight, axioms):
+        @tf.function
+        def loss_clb(y_true, y_pred):
+            bce = self.bce(y_true, y_pred)
+            sat = axioms()
+            return (
+                (1.0 - satisfiability_weight) * bce
+                + satisfiability_weight * (1.0 - sat),
+                bce,
+                sat,
+            )
+
+        return loss_clb
 
     def fit(
         self,
@@ -222,12 +237,15 @@ class LTNMatchingModel:
         right,
         matches,
         epochs,
-        satisfiability_weight=0.5,
+        satisfiability_weight=1.0,
         verbose=1,
         log_mod_n=1,
         **kwargs,
     ):
         """Fit the model."""
+        if satisfiability_weight < 0.0 or satisfiability_weight > 1.0:
+            raise ValueError("Satisfiability weight must be between 0 and 1")
+
         data_generator = DataGenerator(
             self.record_pair_network.similarity_map, left, right, matches, **kwargs
         )
@@ -236,14 +254,16 @@ class LTNMatchingModel:
 
         if verbose > 0:
             print(
-                f"| {'Epoch':<10} | {'Loss':<10} | {'Rec':<10} | {'Prec':<10} "
+                f"| {'Epoch':<10} | {'BCE':<10} | {'Rec':<10} | {'Prec':<10} "
                 f"| {'F1':<10} | {'Sat':<10} |"
             )
+
+        loss_clb = self.__make_loss(satisfiability_weight, axioms)
+
         for epoch in range(epochs):
-            loss1, loss2, tp, fp, tn, fn = self.__for_epoch(
+            loss, bce, sat, tp, fp, tn, fn = self.__for_epoch(
                 data_generator,
-                satisfiability_weight,
-                axioms,
+                loss_clb,
                 trainable_variables,
                 verbose=verbose - 1,
             )
@@ -252,14 +272,14 @@ class LTNMatchingModel:
             f1 = 2.0 * precision * recall / (precision + recall)
             if verbose > 0 and epoch % log_mod_n == 0:
                 print(
-                    f"| {epoch:<10} | {loss1.numpy():<10.4f} | {recall:<10.4f} "
+                    f"| {epoch:<10} | {bce.numpy():<10.4f} | {recall:<10.4f} "
                     f"| {precision:<10.4f} | {f1:<10.4f} "
-                    f"| {1.0 - loss2:<10.4f} |"
+                    f"| {sat:<10.4f} |"
                 )
         if verbose > 0:
             print(
                 f"Training finished at Epoch {epoch} with "
-                f"DL loss {loss1:.4f} and Sat {axioms():.4f}"
+                f"DL loss {loss:.4f} and Sat {sat:.4f}"
             )
 
     def evaluate(self, left, right, matches, batch_size=32, satisfiability_weight=0.5):
@@ -275,11 +295,11 @@ class LTNMatchingModel:
         )
         axioms = self.__make_axioms(data_generator)
         trainable_variables = self.record_pair_network.trainable_variables
+        loss_clb = self.__make_loss(satisfiability_weight, axioms)
 
-        loss1, loss2, tp, fp, tn, fn = self.__for_epoch(
+        loss, bce, sat, tp, fp, tn, fn = self.__for_epoch(
             data_generator,
-            satisfiability_weight,
-            axioms,
+            loss_clb,
             trainable_variables,
             verbose=1,
         )
@@ -292,7 +312,7 @@ class LTNMatchingModel:
         print(f"Recall: {recall:.4f}")
         print(f"Precision: {precision:.4f}")
         print(f"F1: {f1:.4f}")
-        print(f"Satisfiability: {1.0 - loss2:.4f}")
+        print(f"Satisfiability: {sat:.4f}")
 
     def predict_from_generator(self, generator):
         """Generate model predictions from a generator."""
