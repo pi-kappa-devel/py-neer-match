@@ -1,7 +1,7 @@
 # Neer Match
 
 <img src="docs/source/_static/img/hex-logo.png" align="right" height="192"/>
-NEurosymbolic Entity Reasoning and Matching.
+NEural-symbolic Entity Reasoning and Matching.
 
 # Features
 

@@ -1,6 +1,6 @@
 """Neer Match Package.
 
-Neuro-symbolic Entity Reasoning and Matching.
+Neural-symbolic Entity Reasoning and Matching.
 """
 
-__version__ = '0.7.7'
+__version__ = '0.7.8'

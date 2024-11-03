@@ -1,6 +1,7 @@
 """Auxiliary test variables."""
 
 from neer_match.examples import games
+from neer_match.matching_model import DLMatchingModel, NSMatchingModel
 from neer_match.similarity_encoding import SimilarityEncoder
 from neer_match.similarity_map import SimilarityMap
 
@@ -27,3 +28,6 @@ sencoder = SimilarityEncoder(smap)
 left = games.left
 right = games.right
 matches = games.matches
+
+dl_model = DLMatchingModel(smap)
+ns_model = NSMatchingModel(smap)

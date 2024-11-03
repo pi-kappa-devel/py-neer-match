@@ -2,7 +2,7 @@
 Matching models module.
 
 This module contains functionality for instantiating, training, and evaluating
-deep learning and neuro-symbolic matching models
+deep learning and neural-symbolic matching models
 """
 
 from neer_match.axiom_generator import AxiomGenerator
@@ -128,8 +128,8 @@ class DLMatchingModel(tf.keras.Model):
         return self.record_pair_network.similarity_map
 
 
-class LTNMatchingModel:
-    """A logic tensor network matching model class."""
+class NSMatchingModel:
+    """A neural-symbolic matching model class."""
 
     def __init__(
         self,
@@ -139,7 +139,7 @@ class LTNMatchingModel:
         initial_record_width_scale=10,
         record_depth=4,
     ):
-        """Initialize a logic tensor network matching learning matching model."""
+        """Initialize a neural-symbolic matching learning matching model."""
         self.record_pair_network = RecordPairNetwork(
             similarity_map,
             initial_feature_width_scales=initial_feature_width_scales,
