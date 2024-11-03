@@ -24,5 +24,5 @@ def test_compilation():
 
 def test_fit():
     """Test fitting the model."""
-    dl_model.fit(left, right, matches, epochs=1, batch_size=1)
+    dl_model.fit(left, right, matches, epochs=1, batch_size=10)
     assert dl_model is not None, "Failed to fit the model."
