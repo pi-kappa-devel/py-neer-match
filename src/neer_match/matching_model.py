@@ -8,6 +8,7 @@ deep learning and neural-symbolic matching models
 from neer_match.axiom_generator import AxiomGenerator
 from neer_match.data_generator import DataGenerator
 from neer_match.record_pair_network import RecordPairNetwork
+import ltn
 import pandas
 import tensorflow as tf
 
@@ -163,15 +164,61 @@ class NSMatchingModel:
 
     def __make_axioms(self, data_generator):
         axiom_generator = AxiomGenerator(data_generator)
+        field_predicates = [
+            ltn.Predicate(f) for f in self.record_pair_network.field_networks
+        ]
+        record_predicate = ltn.Predicate(self.record_pair_network)
+        is_positive = ltn.Predicate.Lambda(lambda x: x > 0.0)
 
         @tf.function
-        def axioms():
-            matching_axioms = axiom_generator.matching_axioms(self.record_pair_network)
-            non_matching_axioms = axiom_generator.non_matching_axioms(
-                self.record_pair_network
+        def axioms(features, labels):
+            propositions = []
+
+            y = ltn.Variable("v", labels)
+            x = [
+                ltn.Variable(f"x{i}", features[key])
+                for i, key in enumerate(features.keys())
+            ]
+
+            stmt = axiom_generator.ForAll(
+                [x[0], y], field_predicates[0](x[0]), mask=is_positive(y)
             )
-            axioms = matching_axioms + non_matching_axioms
-            kb = axiom_generator.FormAgg(axioms)
+            for i, F in enumerate(field_predicates[1:]):
+                stmt = axiom_generator.Or(
+                    stmt,
+                    axiom_generator.ForAll(
+                        [x[i + 1], y], F(x[i + 1]), mask=is_positive(y)
+                    ),
+                )
+            propositions.append(stmt)
+            stmt = axiom_generator.ForAll(
+                [*x, y], record_predicate(x), mask=is_positive(y)
+            )
+            propositions.append(stmt)
+
+            stmt = axiom_generator.ForAll(
+                [x[0], y],
+                axiom_generator.Not(field_predicates[0](x[0])),
+                mask=axiom_generator.Not(is_positive(y)),
+            )
+            for i, F in enumerate(field_predicates[1:]):
+                stmt = axiom_generator.Or(
+                    stmt,
+                    axiom_generator.ForAll(
+                        [x[i + 1], y],
+                        axiom_generator.Not(F(x[i + 1])),
+                        mask=axiom_generator.Not(is_positive(y)),
+                    ),
+                )
+            propositions.append(stmt)
+            stmt = axiom_generator.ForAll(
+                [*x, y],
+                axiom_generator.Not(record_predicate(x)),
+                mask=axiom_generator.Not(is_positive(y)),
+            )
+            propositions.append(stmt)
+
+            kb = axiom_generator.FormAgg(propositions)
             sat = kb.tensor
             return sat
 
@@ -229,7 +276,7 @@ class NSMatchingModel:
         def loss_clb(features, labels):
             preds = self.record_pair_network(features)
             bce = self.bce(labels, preds)
-            sat = axioms()
+            sat = axioms(features, labels)
             loss = (1.0 - satisfiability_weight) * bce + satisfiability_weight * (
                 1.0 - sat
             )
@@ -238,14 +285,30 @@ class NSMatchingModel:
 
         return loss_clb
 
-    def __traininig_loop(
+    def _training_loop_log_header(self):
+        headers = ["Epoch", "BCE", "Recall", "Precision", "F1", "Sat"]
+        return "| " + " | ".join([f"{x:<10}" for x in headers]) + " |"
+
+    def _training_loop_log_row(self, epoch, logs):
+        recall = logs["TP"] / (logs["TP"] + logs["FN"])
+        precision = logs["TP"] / (logs["TP"] + logs["FP"])
+        f1 = 2.0 * precision * recall / (precision + recall)
+        values = [logs["BCE"].numpy(), recall, precision, f1, logs["Sat"].numpy()]
+        row = f"| {epoch:<10} | " + " | ".join([f"{x:<10.4f}" for x in values]) + " |"
+        return row
+
+    def _training_loop_log_end(self, epoch, logs):
+        return (
+            f"Training finished at Epoch {epoch} with "
+            f"DL loss {logs['BCE'].numpy():.4f} and "
+            f"Sat {logs['Sat'].numpy():.4f}"
+        )
+
+    def _training_loop(
         self, data_generator, loss_clb, trainable_variables, epochs, verbose, log_mod_n
     ):
         if verbose > 0:
-            print(
-                f"| {'Epoch':<10} | {'BCE':<10} | {'Rec':<10} | {'Prec':<10} "
-                f"| {'F1':<10} | {'Sat':<10} |"
-            )
+            print(self._training_loop_log_header())
 
         for epoch in range(epochs):
             logs = self.__for_epoch(
@@ -254,21 +317,10 @@ class NSMatchingModel:
                 trainable_variables,
                 verbose=verbose - 1,
             )
-            recall = logs["TP"] / (logs["TP"] + logs["FN"])
-            precision = logs["TP"] / (logs["TP"] + logs["FP"])
-            f1 = 2.0 * precision * recall / (precision + recall)
             if verbose > 0 and epoch % log_mod_n == 0:
-                print(
-                    f"| {epoch:<10} | {logs['BCE'].numpy():<10.4f} | {recall:<10.4f} "
-                    f"| {precision:<10.4f} | {f1:<10.4f} "
-                    f"| {logs['Sat'].numpy():<10.4f} |"
-                )
+                print(self._training_loop_log_row(epoch, logs))
         if verbose > 0:
-            print(
-                f"Training finished at Epoch {epoch} with "
-                f"DL loss {logs['BCE'].numpy():.4f} and "
-                f"Sat {logs['Sat'].numpy():.4f}"
-            )
+            print(self._training_loop_log_end(epoch, logs))
 
     def fit(
         self,
@@ -305,7 +357,7 @@ class NSMatchingModel:
         loss_clb = self.__make_loss(axioms, satisfiability_weight)
 
         trainable_variables = self.record_pair_network.trainable_variables
-        self.__traininig_loop(
+        self._training_loop(
             data_generator, loss_clb, trainable_variables, epochs, verbose, log_mod_n
         )
 
