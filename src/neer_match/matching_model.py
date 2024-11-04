@@ -162,7 +162,7 @@ class NSMatchingModel:
         ]
         self.record_pair_network(features)
 
-    def __make_axioms(self, data_generator):
+    def _make_axioms(self, data_generator):
         axiom_generator = AxiomGenerator(data_generator)
         field_predicates = [
             ltn.Predicate(f) for f in self.record_pair_network.field_networks
@@ -174,7 +174,7 @@ class NSMatchingModel:
         def axioms(features, labels):
             propositions = []
 
-            y = ltn.Variable("v", labels)
+            y = ltn.Variable("y", labels)
             x = [
                 ltn.Variable(f"x{i}", features[key])
                 for i, key in enumerate(features.keys())
@@ -262,9 +262,16 @@ class NSMatchingModel:
             logs["FN"] += tf.reduce_sum((1.0 - tf.round(preds)) * labels)
             logs["BCE"] += batch_logs["BCE"]
             logs["Sat"] += batch_logs["Sat"]
+            if "ASat" in batch_logs:
+                if "ASat" not in logs:
+                    logs["ASat"] = batch_logs["ASat"]
+                else:
+                    logs["ASat"] += batch_logs["ASat"]
             logs["Loss"] += batch_loss
 
         logs["Sat"] /= no_batches
+        if "ASat" in logs:
+            logs["ASat"] /= no_batches
 
         if verbose > 0:
             print("\r", end="", flush=True)
@@ -353,7 +360,7 @@ class NSMatchingModel:
             self.record_pair_network.similarity_map, left, right, matches, **kwargs
         )
 
-        axioms = self.__make_axioms(data_generator)
+        axioms = self._make_axioms(data_generator)
         loss_clb = self.__make_loss(axioms, satisfiability_weight)
 
         trainable_variables = self.record_pair_network.trainable_variables
@@ -373,7 +380,7 @@ class NSMatchingModel:
             shuffle=False,
         )
 
-        axioms = self.__make_axioms(data_generator)
+        axioms = self._make_axioms(data_generator)
         loss_clb = self.__make_loss(axioms, satisfiability_weight)
 
         trainable_variables = self.record_pair_network.trainable_variables
