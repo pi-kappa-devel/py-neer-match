@@ -5,7 +5,42 @@ The module provides functionality to store and manage a similarity mappings
 between records of two datasets.
 """
 
+from rapidfuzz import distance
 import numpy
+
+
+def discrete(x, y):
+    """Discrete similarity function."""
+    return 1.0 if x == y else 0.0
+
+
+def euclidean(x, y):
+    """Euclidean similarity function."""
+    return 1.0 / (1.0 + abs(x - y))
+
+
+def gaussian(x, y):
+    """Gaussian similarity function."""
+    return numpy.exp(-((x - y) ** 2) / 2.0)
+
+
+def available_similarities():
+    """Return the list of available similarities."""
+    return {
+        "damerau_levenshtein": distance.DamerauLevenshtein.normalized_similarity,
+        "discrete": discrete,
+        "euclidean": euclidean,
+        "gaussian": gaussian,
+        "hamming": distance.Hamming.normalized_similarity,
+        "indel": distance.Indel.normalized_similarity,
+        "jaro": distance.Jaro.normalized_similarity,
+        "jaro_winkler": distance.JaroWinkler.normalized_similarity,
+        "lcsseq": distance.LCSseq.normalized_similarity,
+        "levenshtein": distance.Levenshtein.normalized_similarity,
+        "osa": distance.OSA.normalized_similarity,
+        "postfix": distance.Postfix.normalized_similarity,
+        "prefix": distance.Prefix.normalized_similarity,
+    }
 
 
 class SimilarityMap:
