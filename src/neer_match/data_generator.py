@@ -73,6 +73,8 @@ class DataGenerator(tf.keras.utils.Sequence):
         self.last_batch_size = self.used_size % self.batch_size
         if self.last_batch_size > 0:
             self.no_batches += 1
+        else:
+            self.last_batch_size = self.batch_size
 
         self.similarity_map = similarity_map
         self.similarity_encoder = SimilarityEncoder(similarity_map)

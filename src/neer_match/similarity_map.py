@@ -95,20 +95,24 @@ class SimilarityMap:
 
     def association_names(self):
         """Return a unique name for each association in the similarity map."""
-        return [key.replace("~", "_") for key in self.instructions.keys()]
+        names = []
+        for key in self.instructions.keys():
+            parts = [p.strip() for p in key.split("~")]
+            names.append(parts[0] if len(parts) == 1 else f"{parts[0]}_{parts[1]}")
+        return names
 
     def keys(self):
         """Return a unique key for each similarity map entry.
 
         Combine association with similarity names and return them.
         """
-        return sum(
-            [
-                [f"{k.replace('~', '_')}_{s}" for s in v]
-                for k, v in self.instructions.items()
-            ],
-            [],
-        )
+        keys = []
+        for key, value in self.instructions.items():
+            parts = [p.strip() for p in key.split("~")]
+            name = parts[0] if len(parts) == 1 else f"{parts[0]}_{parts[1]}"
+            for similarity in value:
+                keys.append(f"{name}_{similarity}")
+        return keys
 
     def __iter__(self):
         """Iterate over the similarity map."""
