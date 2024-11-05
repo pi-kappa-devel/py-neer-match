@@ -4,7 +4,7 @@ Similarity encoding module.
 The module provides functionality to store and manage a similarity encoders.
 """
 
-from neer_match.similarity_map import SimilarityMap
+from neer_match.similarity_map import available_similarities, SimilarityMap
 import numpy
 import pandas
 

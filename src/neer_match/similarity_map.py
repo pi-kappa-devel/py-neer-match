@@ -70,8 +70,8 @@ class SimilarityMap:
         for association, similarities in self.instructions.items():
             parts = association.split("~")
             assert len(parts) == 1 or len(parts) == 2
-            lcol = parts[0]
-            rcol = parts[1] if len(parts) == 2 else lcol
+            lcol = parts[0].strip()
+            rcol = parts[1].strip() if len(parts) == 2 else lcol
             for similarity in similarities:
                 self.lcols.append(lcol)
                 self.rcols.append(rcol)
