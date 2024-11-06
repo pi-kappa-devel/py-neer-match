@@ -62,12 +62,11 @@ class DataGenerator(tf.keras.utils.Sequence):
             no_matches = len(self.matches)
             no_total_mismatches = self.full_size - no_matches
             no_mismatches_per_match = max(no_total_mismatches // no_matches, 1)
-            self.no_used_mismatches_per_match = min(
+            self.no_used_mismatches_per_match = max(
                 int(self.mismatch_share * no_mismatches_per_match),
-                no_mismatches_per_match,
+                1,
             )
             self.used_size = self.no_used_mismatches_per_match * no_matches + no_matches
-
         self.batch_size = int(min(batch_size, self.used_size))
         self.no_batches = int(np.floor(self.used_size / self.batch_size))
         self.last_batch_size = self.used_size % self.batch_size
@@ -91,7 +90,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         for i, (li, ri) in enumerate(self.matches.itertuples(index=False)):
             indices = np.append(indices, li * len(self.right) + ri)
         assert len(indices) == len(self.matches)
-        assert len(indices) < self.used_size
+        assert len(indices) <= self.used_size
         for li in range(len(self.left)):
             for ri in range(len(self.right)):
                 if any(

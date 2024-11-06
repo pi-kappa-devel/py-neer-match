@@ -395,16 +395,18 @@ class NSMatchingModel:
         fp = logs["FP"]
         tn = logs["TN"]
         fn = logs["FN"]
-        acc = (tp + tn) / (tp + tn + fp + fn)
-        recall = tp / (tp + fn)
-        precision = tp / (tp + fp)
-        f1 = 2.0 * precision * recall / (precision + recall)
-        print(f"TP: {tp}, FP: {fp}, TN: {tn}, FN: {fn}")
-        print(f"Accuracy: {acc:.4f}")
-        print(f"Recall: {recall:.4f}")
-        print(f"Precision: {precision:.4f}")
-        print(f"F1: {f1:.4f}")
-        print(f"Satisfiability: {logs['Sat'].numpy():.4f}")
+        logs["Accuracy"] = (tp + tn) / (tp + tn + fp + fn)
+        logs["Recall"] = tp / (tp + fn)
+        logs["Precision"] = tp / (tp + fp)
+        logs["F1"] = (
+            2.0
+            * logs["Precision"]
+            * logs["Recall"]
+            / (logs["Precision"] + logs["Recall"])
+        )
+        return {
+            key: value.numpy() for key, value in logs.items() if key != "no_batches"
+        }
 
     def predict_from_generator(self, generator):
         """Generate model predictions from a generator."""
@@ -413,7 +415,7 @@ class NSMatchingModel:
             if i == 0:
                 continue
             preds = tf.concat([preds, self.record_pair_network(features)], axis=0)
-        return preds
+        return preds.numpy()
 
     def predict(self, left, right, batch_size=32):
         """Generate model predictions."""
