@@ -20,6 +20,7 @@ release = neer_match.__version__
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
 ]
@@ -36,6 +37,25 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
+
+
+extlinks = {
+    "ltn-tut-2c": (
+        "https://nbviewer.org/github/logictensornetworks/logictensornetworks/blob/"
+        "master/tutorials/2b-operators_and_gradients.ipynb%s",
+        None,
+    )
+}
+
+
+def skip(app, what, name, obj, would_skip, options):
+    if name in ["__getitem__", "__init__", "__len__", "__str__"]:
+        return False
+    return would_skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -60,7 +80,7 @@ html_theme_options = {
     "extra_nav_links": {
         "📦 PyPi Package": "https://pypi.org/project/neer-match/",
         "📦 R Package": "https://github.com/pi-kappa-devel/r-neer-match",
-        "📖 R Docs": "https://r-neer-match.pikappa.eu"
+        "📖 R Docs": "https://r-neer-match.pikappa.eu",
     },
 }
 

@@ -1,33 +1,65 @@
 """
 Entity matching data generator module.
 
-This module provides a data generation functionality for entity matching
-tasks.
+This module provides a data generation functionality for entity matching tasks.
 """
 
+from neer_match.similarity_map import SimilarityMap
 from neer_match.similarity_encoding import SimilarityEncoder
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import typing
 
 
 class DataGenerator(tf.keras.utils.Sequence):
     """Data generator class.
 
-    The class provides a data generator for entity matching tasks.
+    The class provides a data generator for entity matching tasks. Instances generate
+    batches of similarities for the associated fields of two records in the
+    cross product of the left and right data frames. The cross product is not explicitly
+    computed. Instead, instances emulate it using indexing calculations.
+
+    Attributes:
+        left (pandas.DataFrame): The left DataFrame.
+        right (pandas.DataFrame): The right DataFrame.
+        matches (pandas.DataFrame): The matches DataFrame.
+        batch_size (int): Batch size.
+        mismatch_share (float): Mismatches share.
+        shuffle (bool): Shuffle flag.
+        full_size (int): The number of potential the record pairs.
+        used_size (int): The used size of the record pairs.
+        no_used_mismatches_per_match (int): The number of used mismatches per match.
+        no_batches (int): The number of batches per epoch.
+        last_batch_size (int): The size of the last batch.
+        similarity_map (SimilarityMap): The similarity map.
+        similarity_encoder (SimilarityEncoder): The similarity encoder.
+        indices (numpy.ndarray): The used indices for the record pairs.
     """
 
     def __init__(
         self,
-        similarity_map,
-        left,
-        right,
-        matches=None,
-        batch_size=32,
-        mismatch_share=0.1,
-        shuffle=False,
-    ):
-        """Initialize a data generator object."""
+        similarity_map: SimilarityMap,
+        left: pd.DataFrame,
+        right: pd.DataFrame,
+        matches: pd.DataFrame = None,
+        batch_size: int = 32,
+        mismatch_share: float = 0.1,
+        shuffle: bool = False,
+    ) -> None:
+        """Initialize a data generator object.
+
+        Prepare the indexing variables that are used in the data generation process.
+
+        Args:
+            similarity_map: A similarity map object.
+            left: The left DataFrame.
+            right: The right DataFrame.
+            matches: The matches DataFrame.
+            batch_size: Batch size.
+            mismatch_share: Mismatches share.
+            shuffle: Shuffle flag.
+        """
         if not isinstance(left, pd.DataFrame):
             raise ValueError("Input left must be a pandas DataFrame.")
         if not isinstance(right, pd.DataFrame):
@@ -54,7 +86,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         self.mismatch_share = mismatch_share
         self.shuffle = shuffle
 
-        self.dim = len(similarity_map)
         self.full_size = len(left) * len(right)
         self.used_size = self.full_size
         self.no_used_mismatches_per_match = None
@@ -82,7 +113,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         self.on_epoch_end()
 
-    def __prepare_indices(self):
+    def __prepare_indices(self) -> np.ndarray:
         if self.no_used_mismatches_per_match is None:
             return np.arange(self.used_size, dtype=np.int32)
 
@@ -106,24 +137,26 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         return indices
 
-    def no_pairs(self):
+    def no_pairs(self) -> int:
         """Return the number of record pairs."""
         return self.used_size
 
-    def no_matches(self):
+    def no_matches(self) -> int:
         """Return the number of matches."""
         return len(self.matches)
 
-    def no_mismatches(self):
+    def no_mismatches(self) -> int:
         """Return the number of mismatches."""
         return self.used_size - self.no_matches()
 
-    def __side_indices(self, indices):
+    def __side_indices(
+        self, indices: np.ndarray
+    ) -> typing.Tuple[np.ndarray, np.ndarray]:
         lpos = np.array([k // len(self.right) for k in indices], dtype=np.int32)
         rpos = np.array([k % len(self.right) for k in indices], dtype=np.int32)
         return lpos, rpos
 
-    def __labels(self, lpos, rpos):
+    def __labels(self, lpos: np.ndarray, rpos: np.ndarray) -> np.ndarray:
         if self.matches is None:
             return None
         labels = np.zeros((len(lpos)), dtype=np.float32)
@@ -131,11 +164,13 @@ class DataGenerator(tf.keras.utils.Sequence):
             labels[i] = any((self.matches.left == lp) & (self.matches.right == rpos[i]))
         return labels
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of batches per epoch."""
         return self.no_batches
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: int
+    ) -> typing.Union[dict, typing.Tuple[dict, np.ndarray]]:
         """Get the batch at the given index."""
         begin = index * self.batch_size
         if index < self.no_batches - 1:
@@ -159,12 +194,12 @@ class DataGenerator(tf.keras.utils.Sequence):
         labels = self.__labels(lpos, rpos)
         return features, labels
 
-    def on_epoch_end(self):
-        """Shuffle indices at the end of each epoch."""
+    def on_epoch_end(self) -> None:
+        """Maybe shuffle indices at the end of each epoch."""
         if self.shuffle:
             np.random.shuffle(self.indices)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a string representation of the data generator."""
         items = "\n  ".join(
             [
