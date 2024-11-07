@@ -29,6 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          echo "ok"
           python -m pip install sphinx
 
       - name: Build Sphinx docs
