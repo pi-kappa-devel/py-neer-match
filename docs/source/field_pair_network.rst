@@ -6,4 +6,3 @@ Field Pair Netwrok Documentation
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

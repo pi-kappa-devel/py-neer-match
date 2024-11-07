@@ -6,4 +6,3 @@ Similarity Map Documentation
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

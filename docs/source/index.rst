@@ -1,13 +1,11 @@
-Neer Match Documentation
-========================
+.. include:: README.md
+   :parser: commonmark
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    axiom_generator
    data_generator
@@ -24,4 +22,3 @@ Indices and Tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

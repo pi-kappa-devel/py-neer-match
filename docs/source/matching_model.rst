@@ -6,4 +6,3 @@ Matching Model Documentation
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

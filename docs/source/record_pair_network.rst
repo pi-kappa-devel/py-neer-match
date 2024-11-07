@@ -6,4 +6,3 @@ Record Pair Network Documentation
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
