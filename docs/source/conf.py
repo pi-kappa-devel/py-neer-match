@@ -58,8 +58,9 @@ html_theme_options = {
     "note_border": "#c8c8c8",
     "fixed_sidebar": True,
     "extra_nav_links": {
-        "📦 Python Package": "https://pypi.org/project/neer-match/",
+        "📦 PyPi Package": "https://pypi.org/project/neer-match/",
         "📦 R Package": "https://github.com/pi-kappa-devel/r-neer-match",
+        "📖 R Docs": "https://r-neer-match.pikappa.eu"
     },
 }
 
