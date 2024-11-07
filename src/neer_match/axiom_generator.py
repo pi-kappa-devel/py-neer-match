@@ -57,33 +57,3 @@ class AxiomGenerator:
     def field_non_matching_constants(self):
         """Return field non matching constants."""
         return self.__select_field_constants(0.0)
-
-    def matching_axioms(self, record_classifier):
-        """Return matching axioms."""
-        fc = self.field_matching_constants()
-        rc = [[f[i] for f in fc] for i in range(len(fc[0]))]
-        field_predicates = [ltn.Predicate(f) for f in record_classifier.field_networks]
-        record_predicate = ltn.Predicate(record_classifier)
-        axioms = []
-        for r in rc:
-            stmt = field_predicates[0](r[0])
-            for i, F in enumerate(field_predicates[1:]):
-                stmt = self.Or(stmt, F(r[i + 1]))
-            axioms.append(stmt)
-            axioms.append(record_predicate(r))
-        return axioms
-
-    def non_matching_axioms(self, record_classifier):
-        """Return non matching axioms."""
-        fc = self.field_non_matching_constants()
-        rc = [[f[i] for f in fc] for i in range(len(fc[0]))]
-        field_predicates = [ltn.Predicate(f) for f in record_classifier.field_networks]
-        record_predicate = ltn.Predicate(record_classifier)
-        axioms = []
-        for r in rc:
-            stmt = field_predicates[0](r[0])
-            for i, F in enumerate(field_predicates[1:]):
-                stmt = self.And(stmt, F(r[i + 1]))
-            axioms.append(self.Not(stmt))
-            axioms.append(self.Not(record_predicate(r)))
-        return axioms

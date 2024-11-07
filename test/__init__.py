@@ -29,5 +29,11 @@ left = games.left
 right = games.right
 matches = games.matches
 
+left_short = left.iloc[0:3, :]
+right_short = right.iloc[0:3, :]
+matches_short = matches.join(left_short, on="left", how="inner")[
+    ["left", "right"]
+].join(right_short, on="right", how="inner")[["left", "right"]]
+
 dl_model = DLMatchingModel(smap)
 ns_model = NSMatchingModel(smap)

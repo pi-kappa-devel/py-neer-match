@@ -131,24 +131,6 @@ class DataGenerator(tf.keras.utils.Sequence):
             labels[i] = any((self.matches.left == lp) & (self.matches.right == rpos[i]))
         return labels
 
-    def __select_features(self, value):
-        if self.matches is None:
-            return None
-        lpos, rpos = self.__side_indices(self.indices)
-        labels = self.__labels(lpos, rpos)
-        lpos = lpos[labels == value]
-        rpos = rpos[labels == value]
-        features = self.similarity_encoder(self.left.iloc[lpos], self.right.iloc[rpos])
-        return features
-
-    def matching_features(self):
-        """Return the features of the matching pairs."""
-        return self.__select_features(1.0)
-
-    def non_matching_features(self):
-        """Return the features of the non-matching pairs."""
-        return self.__select_features(0.0)
-
     def __len__(self):
         """Return the number of batches per epoch."""
         return self.no_batches

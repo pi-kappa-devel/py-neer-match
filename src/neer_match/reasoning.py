@@ -17,9 +17,9 @@ class RefutationModel(NSMatchingModel):
 
     def __make_claims(self, axiom_generator, refutation):
         instructions = axiom_generator.data_generator.similarity_map.instructions
-        rassoc = refutation[0]
+        rassoc = list(refutation.keys())[0]
         rindex = list(instructions.keys()).index(rassoc)
-        rsim = refutation[1]
+        rsim = list(refutation.values())[0]
         if len(rsim) == 0:
             sindices = range(len(instructions[rassoc]))
         else:
@@ -97,6 +97,46 @@ class RefutationModel(NSMatchingModel):
         row = f"| {epoch:<10} | " + " | ".join([f"{x:<10.4f}" for x in values]) + " |"
         return row
 
+    def __validate_refutation_arg(self, refutation):
+        if isinstance(refutation, str):
+            if refutation not in self.similarity_map.instructions.keys():
+                raise ValueError(f"Association {refutation} is not in similarity map.")
+            refutation = {refutation: self.similarity_map.instructions[refutation]}
+        elif isinstance(refutation, dict):
+            if len(refutation.keys()) != 1:
+                raise ValueError(
+                    "Refutation model can be initialized with only one refutation "
+                    f"association. Instead got {len(refutation.keys())}."
+                )
+            key = list(refutation.keys())[0]
+            if refutation[key] is None:
+                refutation = {key: self.similarity_map.instructions[key]}
+            elif isinstance(refutation[key], str):
+                if refutation[key] not in self.similarity_map.instructions[key]:
+                    raise ValueError(
+                        f"Similarity {refutation[key]} is not in association {key}."
+                    )
+                refutation[key] = [refutation[key]]
+            elif isinstance(refutation[key], list):
+                if len(refutation[key]) == 0:
+                    refutation = {key: self.similarity_map.instructions[key]}
+                for similarity in refutation[key]:
+                    if similarity not in self.similarity_map.instructions[key]:
+                        raise ValueError(
+                            f"Similarity {similarity} is not in association {key}."
+                        )
+            else:
+                raise ValueError(
+                    "Refutation similarities can be none or a list of similarities."
+                    f"Instead got type {type(refutation[key])}."
+                )
+        else:
+            raise ValueError(
+                "Refutation must be a string or a dictionary. "
+                f"Instead got type {type(refutation)}."
+            )
+        return refutation
+
     def fit(
         self,
         left,
@@ -113,24 +153,7 @@ class RefutationModel(NSMatchingModel):
         **kwargs,
     ):
         """Fit the refutation model."""
-        if not (isinstance(refutation, str) or isinstance(refutation, tuple)):
-            raise ValueError(
-                "Refutation must be a string or a tuple."
-                f"Instead got type {type(refutation)}."
-            )
-        if isinstance(refutation, str) or len(refutation) == 1:
-            refutation = (refutation[0], None)
-        if refutation[0] not in self.similarity_map.instructions.keys():
-            raise ValueError(f"Association {refutation[0]} is not in similarity map.")
-        if refutation[1] is None:
-            refutation = (refutation[0], tuple())
-        elif isinstance(refutation[1], str):
-            refutation[1] = (refutation[1], tuple())
-        for similarity in refutation[1]:
-            if similarity not in self.similarity_map.instructions[refutation[0]]:
-                raise ValueError(
-                    f"Similarity {similarity} is not in association {refutation[0]}."
-                )
+        refutation = self.__validate_refutation_arg(refutation)
         if satisfiability_threshold < 0.0 or satisfiability_threshold > 1.0:
             raise ValueError("Satisfiability threshold must be between 0 and 1")
         if axioms_non_sat_scale < 0.0:

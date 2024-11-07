@@ -34,7 +34,7 @@ def partial_dependence_function(model, left, right, xfeatures):
     for features in generator:
         for i, (apos, spos) in enumerate(positions.items()):
             features[names[apos]][:, spos] = xvalues[i]
-        preds = model(features)
+        preds = model.record_pair_network(features)
         result += tf.reduce_sum(preds)
     result /= generator.no_pairs()
     return result.numpy()
@@ -42,10 +42,12 @@ def partial_dependence_function(model, left, right, xfeatures):
 
 def partial_dependence(model, left, right, key, n=50):
     """Calculate the partial dependence of a key over a domain grid."""
+    if not isinstance(n, int) or n < 2:
+        raise ValueError("Interpolation points (n) must be an integer greater than 1")
     return np.array(
         [
-            partial_dependence_function(model, left, right, {key: i / n})
-            for i in range(n + 1)
+            partial_dependence_function(model, left, right, {key: i / (n - 1)})
+            for i in range(n)
         ]
     )
 
@@ -57,7 +59,7 @@ def partial_dependence_feature_importance(model, left, right, key, n=50):
 
 def partial_dependence_plot(model, left, right, key, n=50):
     """Plot the partial dependence of a key."""
-    domain = [i / n for i in range(n + 1)]
+    domain = [i / (n - 1) for i in range(n)]
     values = partial_dependence(model, left, right, key, n)
     std = np.std(values)
     values_up = values + std
@@ -101,21 +103,21 @@ def accumulated_local_effect(model, left, right, xkey, xvalue, centered=True, k=
             xi = (x >= lvalue) & (x <= hvalue)
             used = {k: f[xi, :] for k, f in features.items()}
             used[names[apos]][:, spos] = lvalue
-            lpreds = model(used)
+            lpreds = model.record_pair_network(used)
             used[names[apos]][:, spos] = hvalue
-            hpreds = model(used)
+            hpreds = model.record_pair_network(used)
             term += tf.reduce_sum(hpreds - lpreds).numpy()
             count += sum(x)
         result += term / count
+    if centered:
+        result -= partial_dependence_function(model, left, right, {xkey: xvalue})
     return result
 
 
-def accumulated_local_effect_plot(model, left, right, key, n=50, k=50):
+def accumulated_local_effect_plot(model, left, right, key, centered=True, n=50, k=50):
     """Plot the accumulated local effect of a key."""
     domain = [i / n for i in range(n + 1)]
-    values = [
-        accumulated_local_effect(model, left, right, key, i, k=k) for i in domain
-    ]
+    values = [accumulated_local_effect(model, left, right, key, i, k=k) for i in domain]
     std = np.std(values)
     values_up = values + std
     values_down = values - std
