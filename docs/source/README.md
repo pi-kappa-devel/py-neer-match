@@ -1,4 +1,4 @@
-# Neer Match <a href="https://r-neer-match.pikappa.eu"><img src="man/figures/logo.png" align="right" height="139" alt="neermatch website" /></a>
+# Neer Match
 
 <!-- badges: start -->
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
@@ -124,7 +124,7 @@ Feel free to share, modify, and distribute. If you implement new features that m
 
 # License
 
-The package is distributed under the [MIT license](LICENSE.txt).
+The package is distributed under the [MIT license](LICENSE.html).
 
 # References
 
