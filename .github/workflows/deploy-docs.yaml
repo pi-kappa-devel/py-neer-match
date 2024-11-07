@@ -40,6 +40,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           lftp -c "
+            set ssl:verify-certificate no;
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
             mirror -R -P 5 docs/build $FTP_DOCS_PATH;
             bye;
