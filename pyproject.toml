@@ -30,10 +30,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
 [project.urls]
-"Homepage" = "https://neer-match.pikappa.eu/"
-"Documentation" = "https://neer-match.readthedocs.io/en/latest/"
-"Source Code" = "https://github.com/pi-kappa-devel/neer-match"
-"Bug Tracker" = "https://github.com/pi-kappa-devel/neer-match/issues"
+"Homepage" = "https://py-neer-match.pikappa.eu/"
+"Documentation" = "https://py-neer-match.pikappa.eu/"
+"Source Code" = "https://github.com/pi-kappa-devel/py-neer-match"
+"Bug Tracker" = "https://github.com/pi-kappa-devel/py-neer-match/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "neer_match.__version__"}
