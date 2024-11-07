@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get install -y lftp
           python -m pip install --upgrade pip
-          python -m pip install myst-parser sphinx sphinx-autodoc-typehints
+          python -m pip install build myst-parser setuptools sphinx sphinx-autodoc-typehints
 
       - name: Build Sphinx docs
         run: |
