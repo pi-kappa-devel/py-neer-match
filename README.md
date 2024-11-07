@@ -1,4 +1,4 @@
-# Neer Match <a href="https://r-neer-match.pikappa.eu"><img src="man/figures/logo.png" align="right" height="139" alt="neermatch website" /></a>
+# Neer Match <a href="https://py-neer-match.pikappa.eu"><img src="docs/source/_static/img/hex-logo.png" align="right" height="139" alt="neermatch website" /></a>
 
 <!-- badges: start -->
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
