@@ -19,7 +19,7 @@ jobs:
  
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
@@ -34,6 +34,8 @@ jobs:
 
       - name: Build Sphinx docs
         run: |
+          python -m build
+          python -m pip install dist/$(basename `ls -Art dist | tail -n 1` -py3-none-any.whl).tar.gz
           cd docs
           make html
 
