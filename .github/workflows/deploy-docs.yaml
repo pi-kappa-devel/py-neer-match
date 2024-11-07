@@ -13,7 +13,7 @@ jobs:
       FTP_SERVER: ${{ secrets.FTP_SERVER }}
       FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-      FTP_DOCS_PATH: "/py-neer-match.pikappa.eu"
+      FTP_DOCS_PATH: ${{ secrets.FTP_DOCS_PATH }}
  
     steps:
       - name: Checkout code
