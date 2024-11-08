@@ -35,7 +35,7 @@ class FieldPairNetwork(tf.keras.Model):
             initial_width_scale: The initial width scale of the hidden layers.
             depth: The depth of the network.
             **kwargs: Additional keyword arguments passed to parent class
-                      (tf.keras.Model).
+                      (:func:`tensorflow.keras.Model`).
         """
         if not isinstance(size, int) or size < 1:
             raise ValueError("Size must be a positive integer.")
@@ -78,7 +78,7 @@ class FieldPairNetwork(tf.keras.Model):
         )
         return config
 
-    def build(self, input_shape : tuple) -> None:
+    def build(self, input_shape : tf.TensorShape) -> None:
         """Build the network."""
         for layer in self.field_layers:
             layer.build(input_shape)

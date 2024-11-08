@@ -15,7 +15,8 @@ import typing
 class DataGenerator(tf.keras.utils.Sequence):
     """Data generator class.
 
-    The class provides a data generator for entity matching tasks. Instances generate
+    The class provides a data generator for entity matching tasks. It inherits
+    from the tf.keras.utils.Sequence class. Instances generate
     batches of similarities for the associated fields of two records in the
     cross product of the left and right data frames. The cross product is not explicitly
     computed. Instead, instances emulate it using indexing calculations.
