@@ -6,13 +6,52 @@ matching tasks.
 """
 
 from neer_match.data_generator import DataGenerator
+from neer_match.matching_model import (
+    _matching_model_or_raise,
+    DLMatchingModel,
+    NSMatchingModel,
+)
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import typing
 
 
-def lime(model, left, right, xindices, n=100):
-    """Calculate local interpretable model-agnostic explanations."""
+def _xindices_or_raise(xindices: typing.List[int]) -> None:
+    if (
+        not isinstance(xindices, list)
+        or len(xindices) != 2
+        or not all([isinstance(i, int) for i in xindices])
+    ):
+        raise ValueError("The xindices argument must be a list of two integers")
+
+
+def lime(
+    model: typing.Union[DLMatchingModel, NSMatchingModel],
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    xindices: typing.List[int],
+    n: int = 100,
+) -> pd.DataFrame:
+    """Calculate local interpretable model-agnostic explanations.
+
+    Generates a sample of n instances around the pair at the given indices
+    and fits a weighted linear model to explain the prediction of the model.
+
+    Args:
+        model: The matching model to use.
+        left: The left DataFrame.
+        right: The right DataFrame.
+        xindices: The indices of the pair to explain.
+        n: The number of samples to generate.
+    """
+    _matching_model_or_raise(model)
+    _xindices_or_raise(xindices)
+    if not isinstance(n, int) or n < len(model.similarity_map):
+        raise ValueError(
+            f"The n argument must be a positive integer >= {len(model.similarity_map)}."
+        )
+    # The data frame arguments are validated by the DataGenerator
     generator = DataGenerator(
         model.record_pair_network.similarity_map,
         left,
@@ -32,7 +71,12 @@ def lime(model, left, right, xindices, n=100):
         )
     mean = sum_x / generator.no_pairs()
     stddev = tf.sqrt(sum_xx / generator.no_pairs() - mean**2)
-    sample = tf.random.normal((n, 6), mean=mean, stddev=stddev, dtype=tf.dtypes.float64)
+    sample = tf.random.normal(
+        (n, len(generator.similarity_map)),
+        mean=mean,
+        stddev=stddev,
+        dtype=tf.dtypes.float64,
+    )
     sample = tf.clip_by_value(sample, 0.0, 1.0)
     dist = sample - x
     weights = tf.exp(-tf.reduce_sum(dist**2, axis=1) / 2.0)
@@ -60,8 +104,30 @@ def lime(model, left, right, xindices, n=100):
     )
 
 
-def shap(model, left, right, xindices, xkey, iterations=100):
-    """Calculate the Shapley value of a key."""
+def shap(
+    model: typing.Union[DLMatchingModel, NSMatchingModel],
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    xindices: typing.List[int],
+    xkey: str,
+    iterations: int = 100,
+) -> float:
+    """Calculate the Shapley value of a key.
+
+    Estimates the Shapley value of a key for a pair of instances by sampling
+    random sets of features and comparing the model predictions with and without
+    the key.
+
+    Args:
+        model: The matching model to use.
+        left: The left DataFrame.
+        right: The right DataFrame.
+        xindices: The indices of the pair to explain.
+        xkey: The key for which to calculate the Shapley value.
+        iterations: The number of iterations to use.
+    """
+    _matching_model_or_raise(model)
+    _xindices_or_raise(xindices)
     generator = DataGenerator(
         model.record_pair_network.similarity_map,
         left,

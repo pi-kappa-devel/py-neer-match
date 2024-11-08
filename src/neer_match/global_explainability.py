@@ -6,7 +6,11 @@ tasks.
 """
 
 from neer_match.data_generator import DataGenerator
-from neer_match.matching_model import DLMatchingModel, NSMatchingModel
+from neer_match.matching_model import (
+    _matching_model_or_raise,
+    DLMatchingModel,
+    NSMatchingModel,
+)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,11 +36,7 @@ def partial_dependence_function(
         xfeatures: A dictionary of the features with values where the partial
             dependence is calculated.
     """
-    if not isinstance(model, (DLMatchingModel, NSMatchingModel)):
-        raise ValueError(
-            "The model argument must be an instance of DLMatchingModel "
-            "or NSMatchingModel"
-        )
+    _matching_model_or_raise(model)
     if not isinstance(xfeatures, dict):
         raise ValueError("The input xfeatures must be a dictionary")
     for k, v in xfeatures.items():
@@ -187,11 +187,7 @@ def accumulated_local_effect(
         centered: Whether to center the accumulated local effect.
         k: The number of interpolation points
     """
-    if not isinstance(model, (DLMatchingModel, NSMatchingModel)):
-        raise ValueError(
-            "The model argument must be an instance of DLMatchingModel "
-            "or NSMatchingModel"
-        )
+    _matching_model_or_raise(model)
     if not isinstance(xkey, str):
         raise ValueError("The xkey argument must be a string")
     if xkey not in model.similarity_map.keys():

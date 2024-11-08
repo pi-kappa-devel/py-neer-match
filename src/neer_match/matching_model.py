@@ -11,6 +11,7 @@ from neer_match.record_pair_network import RecordPairNetwork
 import ltn
 import pandas
 import tensorflow as tf
+import typing
 
 
 def _suggest(model, left, right, count, batch_size=32, **kwargs):
@@ -437,3 +438,13 @@ class NSMatchingModel:
     def similarity_map(self):
         """Similarity Map of the Model."""
         return self.record_pair_network.similarity_map
+
+
+def _matching_model_or_raise(
+    model: typing.Union[DLMatchingModel, NSMatchingModel]
+) -> None:
+    if not isinstance(model, (DLMatchingModel, NSMatchingModel)):
+        raise ValueError(
+            "The model argument must be an instance of DLMatchingModel "
+            "or NSMatchingModel"
+        )
