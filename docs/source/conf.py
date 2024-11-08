@@ -48,14 +48,15 @@ extlinks = {
 }
 
 
-def skip(app, what, name, obj, would_skip, options):
-    if name in ["__getitem__", "__init__", "__len__", "__str__"]:
+def _skip(app, what, name, obj, would_skip, options):
+    if name in ["__getitem__", "__init__", "__iter__", "__len__", "__str__"]:
         return False
     return would_skip
 
 
 def setup(app):
-    app.connect("autodoc-skip-member", skip)
+    """Set up the Sphinx application."""
+    app.connect("autodoc-skip-member", _skip)
 
 
 # -- Options for HTML output -------------------------------------------------

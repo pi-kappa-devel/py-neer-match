@@ -27,7 +27,8 @@ dependencies = [
     "numpy>=1.26.4",
     "pandas>=2.2.3",
     "rapidfuzz>=3.10.1",
-    "tensorflow>=2.18.0"]
+    "tensorflow>=2.18.0",
+    "typing>=3.7.4"]
 
 [project.urls]
 "Homepage" = "https://py-neer-match.pikappa.eu/"
