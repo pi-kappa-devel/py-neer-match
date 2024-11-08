@@ -7,17 +7,32 @@ The module provides functionality to store and manage a similarity encoders.
 from neer_match.similarity_map import available_similarities, SimilarityMap
 import numpy
 import pandas
+import typing
 
 
 class SimilarityEncoder:
     """Similarity encoder class.
 
-    The class creates a similarity encoder from a similarity map. It can
-    be used to encode pairs of records from two datasets.
+    The class creates a similarity encoder from a similarity map. It can be used to
+    encode pairs of records from two datasets.
+
+    Attributes:
+        similarity_map (SimilarityMap): The similarity map object.
+        scalls (list[str]): The similarity function names.
+        no_scalls (int): The number of similarity calls (field pairs and similarities).
+        no_assoc (int): The number of associations (field pairs).
+        assoc_begin (numpy.ndarray): The beginning offsets of the associations.
+        assoc_sizes (numpy.ndarray): The sizes (number of used similarities) of the
+            associations.
+        assoc_end (numpy.ndarray): The ending indices of the associations.
     """
 
-    def __init__(self, similarity_map):
-        """Initialize a similarity encoder object."""
+    def __init__(self, similarity_map: SimilarityMap) -> None:
+        """Initialize a similarity encoder object.
+
+        Args:
+            similarity_map: The similarity map.
+        """
         if not isinstance(similarity_map, SimilarityMap):
             raise ValueError(
                 "Input similarity_map must be an instance of SimilarityMap. "
@@ -38,16 +53,36 @@ class SimilarityEncoder:
         self.assoc_sizes = numpy.array(self.similarity_map.association_sizes())
         self.assoc_end = self.assoc_begin + self.assoc_sizes
 
-    def __call__(self, left, right):
-        """Encode one or more pair of records."""
+    def __call__(
+        self, left: pandas.DataFrame, right: pandas.DataFrame
+    ) -> typing.List[numpy.ndarray]:
+        """Encode one or more pair of records.
+
+        Calculate the similarities for each association (field pair) and return them
+        in a list of arrays.
+
+        Args:
+            left: The left dataset.
+            right: The right dataset.
+        """
         sim_matrix = self.encode_as_matrix(left, right)
         return [
             sim_matrix[:, self.assoc_begin[i] : self.assoc_end[i]]
             for i in range(self.no_assoc)
         ]
 
-    def encode_as_matrix(self, left, right):
-        """Encode a pair of records as a matrix."""
+    def encode_as_matrix(
+        self, left: pandas.DataFrame, right: pandas.DataFrame
+    ) -> numpy.ndarray:
+        """Encode a pair of records as a matrix.
+
+        Calculate the similarities for each association (field pair) and return them
+        all stacked together in a matrix (i.e., the similarity matrix).
+
+        Args:
+            left: The left dataset.
+            right: The right dataset.
+        """
         if left.shape[0] != right.shape[0]:
             raise ValueError(
                 f"Left and right datasets must have the same number of records. "
@@ -74,12 +109,29 @@ class SimilarityEncoder:
                 ]
             )
 
-    def encoded_shape(self, batch_size=-1):
+    def encoded_shape(
+        self, batch_size: int = -1
+    ) -> typing.List[typing.Tuple[int, int]]:
         """Return the shape of the encoded data."""
         return [(batch_size, sz) for sz in self.assoc_sizes]
 
-    def report_encoding(self, left, right):
-        """Report encoding of a pair of records."""
+    def report_encoding(
+        self,
+        left: typing.Union[pandas.Series, pandas.DataFrame],
+        right: typing.Union[pandas.Series, pandas.DataFrame],
+    ) -> typing.List[pandas.DataFrame]:
+        """Report encoding of a pair of records.
+
+        Calculate the similarities for each association (field pair) in the similarity
+        map and return them in a list of data frames. The function expects that the
+        left and right datasets have the same number of records. It does not operate on
+        the cross product of the records, but rather on the records at the same position
+        in both datasets.
+
+        Args:
+            left: The left dataset.
+            right: The right dataset.
+        """
         smatrix = self.encode_as_matrix(left, right)
         report = []
         if isinstance(left, pandas.Series) and isinstance(right, pandas.Series):
