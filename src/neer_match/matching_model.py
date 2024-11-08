@@ -1,8 +1,8 @@
 """
 Matching models module.
 
-This module contains functionality for instantiating, training, and evaluating
-deep learning and neural-symbolic matching models
+This module contains functionality for instantiating, training, and evaluating deep
+ learning and neural-symbolic matching models
 """
 
 from neer_match.axiom_generator import AxiomGenerator
@@ -620,7 +620,7 @@ class NSMatchingModel:
 
     def suggest(
         self, left: pd.DataFrame, right: pd.DataFrame, count: int, batch_size=16
-    ):
+    ) -> pd.DataFrame:
         """Generate model suggestions.
 
         Construct a data generator from the input data frames using the similarity map

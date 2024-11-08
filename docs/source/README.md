@@ -124,7 +124,7 @@ Feel free to share, modify, and distribute. If you implement new features that m
 
 # License
 
-The package is distributed under the [MIT license](LICENSE.html).
+The package is distributed under the [MIT license](LICENSE.md).
 
 # References
 
