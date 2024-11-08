@@ -12,10 +12,31 @@ class FieldPairNetwork(tf.keras.Model):
     """Field pair network class.
 
     The class creates networks for matching pairs of fields from two datasets.
+
+    Attributes:
+        size (int): The size of the input feature vectors.
+        initial_width_scale (int): The initial width scale of the hidden layers.
+        depth (int): The depth of the network.
     """
 
-    def __init__(self, size, initial_width_scale=10, depth=2, **kwargs):
-        """Initialize a field pair network object."""
+    def __init__(
+        self, size: int, initial_width_scale: int = 10, depth: int = 2, **kwargs
+    ) -> None:
+        """Initialize a field pair network object.
+
+        The network depth is determined from the depth parameter. The width of each
+        hidden layer is determined by the initial width scale and the number of input
+        features. The first hidden layer has a width of size * initial_width_scale, the
+        second has a width of size * initial_width_scale / 2, and so on. The output
+        layer has a sigmoid activation function.
+
+        Args:
+            size: The size of the input feature vectors.
+            initial_width_scale: The initial width scale of the hidden layers.
+            depth: The depth of the network.
+            **kwargs: Additional keyword arguments passed to parent class
+                      (tf.keras.Model).
+        """
         if not isinstance(size, int) or size < 1:
             raise ValueError("Size must be a positive integer.")
         if not isinstance(initial_width_scale, int) or initial_width_scale < 1:
@@ -45,8 +66,8 @@ class FieldPairNetwork(tf.keras.Model):
             )
         ]
 
-    def get_config(self):
-        """Return the configuration of the network."""
+    def get_config(self) -> dict:
+        """Return the network configuration."""
         config = super().get_config().copy()
         config.update(
             {
@@ -57,15 +78,15 @@ class FieldPairNetwork(tf.keras.Model):
         )
         return config
 
-    def build(self, input_shape):
+    def build(self, input_shape : tuple) -> None:
         """Build the network."""
         for layer in self.field_layers:
             layer.build(input_shape)
             input_shape = (input_shape[0], layer.units)
         super().build(input_shape)
 
-    def call(self, inputs):
-        """Run the network on input."""
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
+        """Run the network on inputs."""
         for layer in self.field_layers:
             inputs = layer(inputs)
         return inputs

@@ -1,4 +1,4 @@
-Field Pair Netwrok Documentation
+Field Pair Network Documentation
 ================================
 
 .. automodule:: neer_match.field_pair_network
