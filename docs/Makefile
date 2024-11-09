@@ -22,4 +22,4 @@ help:
 	sed -i 's/LICENSE.txt/LICENSE.md/g' "$(SOURCEDIR)/README.md"
 	sed -i 's/<a.*hex-logo.png.*<\/a>//g' "$(SOURCEDIR)/README.md"
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	quarto render "$(SOURCEDIR)/_static/examples/dl-matching.qmd" --output-dir ../../../build/
+	quarto render "$(SOURCEDIR)/_static/examples/dl-matching.qmd" --output-dir ../../../build/html/
