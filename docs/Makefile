@@ -17,4 +17,9 @@ help:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
+	cp "$(SOURCEDIR)/../../LICENSE.txt" "$(SOURCEDIR)/LICENSE.md"
+	cp "$(SOURCEDIR)/../../README.md" "$(SOURCEDIR)/README.md"
+	sed -i 's/LICENSE.txt/LICENSE.md/g' "$(SOURCEDIR)/README.md"
+	sed -i 's/<a.*hex-logo.png.*<\/a>//g' "$(SOURCEDIR)/README.md"
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	quarto render "$(SOURCEDIR)/_static/examples/dl-matching.qmd" --output-dir ../../../build/

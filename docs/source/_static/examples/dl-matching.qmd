@@ -1,0 +1,262 @@
+---
+title: "Entity Matching with Similarity Maps and Deep Learning"
+self-contained: true
+---
+
+The examples concisely introduces the basic concepts and functionality of the package. Its goals are (i) to bring the reader up to speed with how to use the package to fit entity matching models, and (ii) to familiarize the reader with the basic concepts that are used in the documentation and naming conventions of the package. For simplicity, we use a deep learning matching model for this example. Examples of neural-symbolic matching models are given in the [Neural-symbolic matching](ns-matching.html) and [Reasoning](reasoning.html) examples.
+
+# Prerequisites
+Load the libraries we are going to use and set the seed for reproducibility.
+```{python}
+#| label: setup
+#| output: false
+
+from itables import show
+from neer_match.matching_model import DLMatchingModel
+from neer_match.similarity_map import SimilarityMap
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import random
+import rapidfuzz
+import tensorflow as tf
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+```
+
+# Preprocessing
+The aim of the preprocessing stage is to bring the data in a form that is compatible with the calling conventions of the `neermatch` package. The package expects the data to be in the form of two data frames, `left` and `right`, that contain the entities to be matched. The package also expects a data frame, `matches`, that contains the indices of the matching entities in the `left` and `right` data frames. We illustrate the calling convention by constructing a toy example.
+
+## Left Data Set
+The data used in this example is constructed from a subset of the `game_reviews` dataset shipped with the `R` version of the package (see the [game_review documentation](https://r-neer-match.pikappa.eu/reference/game_reviews.html). The subset is created by selecting all the records in `game_reviews` having titles starting with either `"Metal Slug"` or `"Metal Gear"`. The selection results in 36 records. To keep the example code left-contained, the selection results are hard-coded here.  We name the resulting data frame `left`, following the naming convention of the package. 
+```{python}
+#| label: left-data
+
+left = pd.DataFrame(
+    {
+        "title": [
+            # fmt: off
+            "Metal Gear Solid 4: Guns of the Patriots", "Metal Gear Solid",
+             "Metal Gear Solid 3: Snake Eater", "Metal Gear Solid V: The Phantom Pain",
+             "Metal Gear Solid Mobile", "Metal Gear Solid: Portable Ops",
+             "Metal Gear Solid 2: Substance", "Metal Gear Solid: The Twin Snakes",
+             "Metal Gear Solid", "Metal Gear Rising: Revengeance",
+             "Metal Gear Solid Integral", "Metal Gear Solid: Peace Walker HD Edition",
+             "Metal Slug 4 Mobile", "Metal Gear Rising: Revengeance",
+             "Metal Gear Online", "Metal Gear Acid",
+             "Metal Slug Anthology", "Metal Gear Solid V: Ground Zeroes",
+             "Metal Slug Mobile", "Metal Gear Rising: Revengeance - Jetstream",
+             "Metal Slug 2", "Metal Gear Solid V: Ground Zeroes",
+             "Metal Slug 7", "Metal Gear Solid: VR Missions",
+             "Metal Slug 4 & 5", "Metal Gear Rising: Revengeance - Blade Wolf",
+             "Metal Gear Acid 2", "Metal Slug XX",
+             "Metal Slug Defense", "Metal Slug 1",
+             "Metal Gear Solid V: Metal Gear Online", "Metal Slug Touch",
+             "Metal Slug X", "Metal Gear Rising: Revengeance - Jetstream",
+             "Metal Gear Survive", "Metal Gear",
+             # fmt: on
+        ],
+        "platform": [
+            # fmt: off
+            "PS3", "PS", "PS2", "XONE", "MOBI", "PSP", "XBOX", "GC", "PC", "PC", "PS", "PS3",
+             "MOBI", "X360", "PS3", "PSP", "PS4", "PS4", "MOBI", "PS3", "IOS", "XONE", "DS", "PS",
+             "XBOX", "X360", "MOBI", "PSP", "IOS", "IOS", "PS4", "IOS", "IOS", "X360", "PS4", "MOBI",
+             # fmt: on
+        ],
+        "year": [
+            # fmt: off
+            2008, 1998, 2004, 2015, 2008, 2006, 2002, 2004, 2000, 2014, 1999, 2012, 2008, 2013,
+            2008, 2005, 2016, 2014, 2004, 2013, 2013, 2014, 2008, 1999, 2005, 2013, 2009, 2010,
+            2014, 2012, 2015, 2009, 2013, 2013, 2018, 2004
+            # fmt: on
+        ],
+        "scores": [
+            # fmt: off
+            93.53, 93.24, 91.77, 90.38, 92.50, 86.95, 86.66, 85.58, 84.22, 83.55, 90.00, 90.00,
+            90.00, 82.56, 80.37, 76.70, 80.00, 75.23, 75.00, 75.00, 77.00, 72.50, 72.11, 70.64,
+            70.47, 70.00, 70.00, 68.97, 70.00, 68.33, 67.50, 60.00, 64.00, 60.00, 61.09, 50.00
+            # fmt: on
+        ],
+        "reviews": [
+            # fmt: off
+            85, 29, 86, 12, 2, 60, 56, 69, 18, 11, 1, 1, 1, 31, 8, 52, 1, 48, 4, 2, 5, 6, 42, 18,
+            33, 2, 1, 18, 6, 3, 2, 1, 5, 1, 33, 1
+            # fmt: on
+        ],
+        "developer": [
+            # fmt: off
+            "Kojima Productions/Konami", "KCEJ/Konami", "KCEJ/Konami", 
+            "Kojima Productions/Konami", "Ideaworks3D/Konami", "Kojima Productions/Konami", 
+            "KCEJ/Konami", "Silicon Knights/Konami", "Digital Dialect/Konami",
+            "PlatinumGames/Konami", "Konami", "Kojima Productions/Konami", "SNK Playmore/I-Play",
+            "PlatinumGames/Konami", "Kojima Productions/Konami", "Konami",
+            "Terminal Reality/SNK Playmore", "Kojima Productions/Konami", "SNK Playmore/I-Play",
+            "PlatinumGames/Konami", "SNK Playmore", "Kojima Productions/Konami",
+            "SNK Playmore/Ignition Entertainment", "KCEJ/Konami", "BrezzaSoft/SNK Playmore",
+            "PlatinumGames/Konami", "Konami/Glu Mobile", "SNK Playmore", "SNK Playmore",
+            "SNK Playmore", "Kojima Productions/Konami", "SNK Playmore", "SNK Playmore",
+            "PlatinumGames/Konami", "Konami", "Konami Mobile & Online, Inc./Konami"
+            # fmt: on
+        ],
+    }
+)
+```
+
+## Right Data Set
+What is the `right` data frame in this example? We construct the `right` data frame by copying the `left` data frame and introducing noise in the `title` and `developer` columns. Up to three characters are randomly removed from the `title` column, and up to two characters are randomly removed from the `developer` column. 
+
+In addition, we create three duplicate matching records on the `right` dataset. This illustrates that the matching model of the package can be used to link datasets with records/entities having either one-to-many or many-to-many relations.
+
+By construction, the `left` and `right` datasets in our examples have the same columns. This is not always the case in practice. The `neermatch` package allows to specify different columns of the `left` and `right` datasets for such cases. To illustrate how the package can be used in such cases, we rename the `developer` column in the `right` dataset to `dev`.
+
+```{python}
+#| label: right-data
+
+right = left.copy()
+no_duplicates = 3
+right = pd.concat([right, right.sample(no_duplicates)])
+
+tpos = right.columns.get_loc("title")
+dpos = right.columns.get_loc("developer")
+
+for r in range(right.shape[0]):
+    no_chars = random.randint(1, 3)
+    title = right.iloc[r, tpos]
+    right.iloc[r, tpos] = "".join(
+        [
+            l
+            for i, l in enumerate(title)
+            if i not in random.sample(range(len(title)), no_chars)
+        ]
+    )
+    no_chars = random.randint(1, 2)
+    developer = right.iloc[r, dpos]
+    right.iloc[r, dpos] = "".join(
+        [
+            l
+            for i, l in enumerate(developer)
+            if i not in random.sample(range(len(developer)), no_chars)
+        ]
+    )
+
+right.rename(columns={"developer": "dev"}, inplace=True)
+```
+
+## Matches Data Set
+The matching examples are passed to the matching models as pairs of indices. We do not need to provide non-matching examples. The models automatically pick non-matching examples from the Cartesian product of the `left` and `right` datasets as long as their indices are not in the `matches` dataset. For this application, the matches are constructed by the rows of the `left` and `right` datasets that have the same index and the `python no_duplicates` duplicate matches we created. 
+```{python}
+#| label: matches-data
+
+matches = pd.DataFrame(
+    {
+        "left": left.index.append(right.iloc[-no_duplicates:,].index),
+        "right": range(len(right)),
+    }
+)
+```
+
+# Matching Model Setup
+A matching model initialization requires instructions on constructing the similarity map between the `left` and `right` datasets. The instructions are passed to the model as a named list that specifies
+
+1. which fields are used from each dataset and how they are associated with each other, and
+2. how to encode them, i.e., how to calculate the similarity values.
+
+If the column names of the `left` and `right` are the same, it suffices to supply the common name to the similarity map instruction list (see, e.g., the `title`, `platform`, and `year` items below). If two columns have different names, the instruction should have the form `left_name~right_name`, as it is, for instance, the case for the developing studio in this application (see item `developer~dev`). Not all columns of the datasets need to be used in the instructions. In this example, we do not use the `scores` and `reviews` columns.
+
+The model can be instructed to calculate one or more similarities for each column association. For instance, the instructions of this example specify two similarity calculations for the `platform` and `year` associations and one for the `title` and `developer~dev`. The `neermatch` provides a set of predefined similarity functions that can be used in similarity maps. The string similarities and ratios are calculated using [RapidFuzz](https://maxbachmann.github.io/RapidFuzz/). The complete set of predefined function can be retrieved by calling the [available_similarities()](https://py-neer-match.pikappa.eu/similarity_map.html#neer_match.similarity_map.available_similarities) function.
+
+```{python}
+#| label: similarity-map
+
+instructions = {
+    "title": ["jaro_winkler"],
+    "platform": ["levenshtein", "discrete"],
+    "year": ["euclidean", "discrete"],
+    "developer~dev": ["jaro"]
+}
+
+similarity_map = SimilarityMap(instructions)
+print(similarity_map)
+```
+
+A matching model object is constructed by passing the similarity map instructions. The model prepares encoding operations based on the passed instructions and uses them whenever the model is fitted or evaluated. We skip the construction details of the model in this example and refer the interested reader to the documentation entries of the [DLMatchingModel](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.DLMatchingModel), [RecordPairNetwork](https://py-neer-match.pikappa.eu/record_pair_network.html#neer_match.record_pair_network.RecordPairNetwork), and [FieldPairNetwork](https://py-neer-match.pikappa.eu/field_pair_network.html#neer_match.field_pair_network.FieldPairNetwork) classes.
+```{python}
+#| label: make-dl-matching-model
+
+model = DLMatchingModel(similarity_map)
+```
+
+The model is compiled in the usual way. The compile function wraps the [tensorflow.keras.Model.compile](https://www.tensorflow.org/api_docs/python/tf/keras/Model#compile) function, so all the functionality and options in the latter can be used here.
+```{python}
+#| label: compile-dl-model
+
+model.compile(
+    loss = tf.keras.losses.BinaryCrossentropy(),
+    optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
+)
+```
+
+# Matching Model Fit and Evaluation
+The model is fit using the `fit` function (see the [fit documentation](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.DLMatchingModel.fit) for details). The `fit` function extends the functionality of [tensorflow.keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit) to accommodate the entity matching problem requirements. Firstly, instead of passing features and label arguments, `fit` expects the `left`, `right`, and `matches` data sets. 
+
+During training, counterexamples of matching records are automatically selected from the cross product of left and right data sets based on the `mismatch_share` parameter. Including all the non-matching examples can lead to a highly unbalanced matching dataset. For each record in the `left` data set, appearing in k examples in the `matches` data set, there are up to `n - k` counterexamples, where `n` is the number of records in the `right` data set. The `mismatch_share` parameter controls the ratio of counterexamples to matches. For instance, if `mismatch_share = 0.5`, the `encode` function selects 50% of the possible counterexamples for each match. The counterexamples are selected randomly from the `right` dataset. 
+
+For instance, the `left` and `right` data sets in this example have `python left.shape[0]` and `python right.shape[0]` records respectively, and the `matches` data set has `python matches.shape[0]` records. This allows us to construct `python left.shape[0] * right.shape[0] - matches.shape[0]` non-matching examples. We set `mismatch_share = 0.2`, which means that for each matching example provided in `matches` we get `python floor(0.2*(matches.shape[0] - 1))` non-matching examples (the integer part, i.e., the floor, of number of counterexamples is used).
+
+The remaining arguments are similar to [tensorflow.keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit).
+```{python}
+#| label: fit-dl-model
+#| output: false
+
+model.fit(
+    left,
+    right,
+    matches,
+    epochs=100,
+    batch_size=32,
+    verbose=0
+)
+```
+
+The `evaluate` function overloads the [tensorflow.keras.Model.evaluate](https://www.tensorflow.org/api_docs/python/tf/keras/Model#evaluate) function (see also the [evaluate documentation](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.DLMatchingModel.evaluate)). Similar to fitting a matching model, the `evaluate` call expects `left`, `right`, and `matches` data sets. 
+```{python}
+#| label: evaluate-dl-model
+
+model.evaluate(left, right, matches, verbose = 0)
+```
+
+# Predictions and Suggestions
+Matching predictions can be obtained in two ways from the fitted model. Either by calling `predict` or by calling `suggest`. The `predict` function returns a vector of prediction probabilities for each combination of `left` and `right` records. The prediction probabilities are stored in row-major order. First, the matching probabilities of the first row of `left` with all the rows of `right` are given. Then, the probabilities of the second row of `left` with all the rows of `right` are given, and so on. In total, the `predict` function returns a vector with rows equal to the product of the number of rows in the `left` and `right` data sets.
+```{python}
+#| label: dl-model-predictions
+#| fig.alt: "CDF of DL Matching Predictions"
+
+predictions = model.predict(left, right, verbose = 0)
+
+fig, ax = plt.subplots()
+counts, bins= np.histogram(predictions, bins = 100)
+cdf = np.cumsum(counts)/np.sum(counts)
+ax.plot(bins[1:], cdf)
+ax.set_xlabel("Matching Prediction")
+ax.set_ylabel("Cumulative Density")
+plt.show()
+```
+
+The `suggest` function returns the best matching predictions of the model for each row of the `left` dataset. The prediction probabilities of `predict` are grouped by the indices of the `left` dataset and sorted in descending order. The caller can choose the number of returned suggestions by setting the `count` argument of `suggest`.
+```{python}
+#| label: dl-model-suggestions
+
+suggestions = model.suggest(left, right, count = 3, verbose = 0)
+suggestions["true_match"] = suggestions.loc[:, ["left", "right"]].apply(
+    lambda x: any((x.left == matches.left) & (x.right==matches.right)), axis=1
+)
+suggestions = suggestions.join(
+    matches.iloc[-no_duplicates:,:].assign(duplicate=True).set_index(['left', 'right']),
+    on = ["left", "right"],
+    how = "left"
+)
+
+show(suggestions)
+```

@@ -105,8 +105,6 @@ make html
 
 # Development Notes
 
-## Documentation
-
 ## Logo
 The logo was designed using [Microsoft Designer](https://designer.microsoft.com/) and [GNU Image Manipulation Program (GIMP)](https://www.gimp.org/). The hexagon version of the logo was generated with the R package [hexSticker](https://github.com/GuangchuangYu/hexSticker). It uses the [Philosopher](https://fonts.google.com/specimen/Philosopher) font.
 
