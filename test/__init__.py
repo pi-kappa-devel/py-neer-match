@@ -26,7 +26,7 @@ smap = SimilarityMap(instructions)
 
 sencoder = SimilarityEncoder(smap)
 
-left = left = pd.DataFrame(
+left = pd.DataFrame(
     {
         "title": [
             # fmt: off
