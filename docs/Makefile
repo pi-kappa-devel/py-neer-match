@@ -22,7 +22,7 @@ help:
 	cp "$(SOURCEDIR)/README.md" ../README.md
 	sed -i 's/\[MIT license\](LICENSE.txt)/<a href="LICENSE.html">MIT license<\/a>/g' "$(SOURCEDIR)/README.md"
 	sed -i 's/docs\/source\///g' "$(SOURCEDIR)/README.md"
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	quarto render "$(SOURCEDIR)/_static/examples/dl-matching.qmd" -t gfm
 	mv "$(SOURCEDIR)/_static/examples/dl-matching.md" "$(SOURCEDIR)/dl-matching.md"
 	sed -i 's/dl-matching_files/_static\/examples\/dl-matching_files/g' "$(SOURCEDIR)/dl-matching.md"
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
