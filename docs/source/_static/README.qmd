@@ -43,13 +43,11 @@ To train the model you need to provide three datasets. Two datasets should conta
 #| label: data-setup
 #| include: false
 
-import os
-import sys
-sys.path.append("../../../")
-import test
+with open("../../../test/__init__.py", "r") as ifh:
+    exec(ifh.read())
 
 def prepare_data():
-    return test.left, test.right, test.matches
+    return left, right, matches
 ```
 
 ```{python}
