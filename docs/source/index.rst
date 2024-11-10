@@ -1,11 +1,21 @@
 .. include:: README.md
    :parser: commonmark
 
-Contents
+Examples
 ========
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Examples
+
+   dl-matching.md
+
+Documentation
+=============
+
+.. toctree::
    :maxdepth: 2
+   :caption: Documentation
 
    axiom_generator
    data_generator
@@ -16,6 +26,7 @@ Contents
    record_pair_network
    similarity_encoding
    similarity_map
+
 
 Indices and Tables
 ==================

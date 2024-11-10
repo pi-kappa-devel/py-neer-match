@@ -1,5 +1,5 @@
-Data Generator Documentation
-============================
+Data Generator
+==============
 
 .. automodule:: neer_match.data_generator
     :members:

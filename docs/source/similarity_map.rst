@@ -1,5 +1,5 @@
-Similarity Map Documentation
-============================
+Similarity Map
+==============
 
 .. automodule:: neer_match.similarity_map
     :members:

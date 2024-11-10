@@ -1,5 +1,5 @@
-Matching Model Documentation
-============================
+Matching Model
+==============
 
 .. automodule:: neer_match.matching_model
     :members:

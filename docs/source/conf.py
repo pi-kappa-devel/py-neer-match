@@ -1,5 +1,7 @@
 import os
+import sphinx_bootstrap_theme
 import sys
+
 
 sys.path.insert(0, os.path.abspath("../.."))
 
@@ -62,28 +64,31 @@ def setup(app):
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+
+html_theme = "bootstrap"
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+
 html_static_path = ["_static"]
 
 html_logo = "_static/img/logo.png"
 html_theme_options = {
     "github_user": "pi-kappa-devel",
-    "github_repo": "neer-match",
-    "github_banner": True,
-    "github_button": True,
-    "github_type": "star",
-    "github_count": True,
-    "show_powered_by": True,
-    "show_related": True,
-    "note_bg": "#ffffff",
-    "note_border": "#c8c8c8",
-    "fixed_sidebar": True,
     "extra_nav_links": {
+        "Relevant Links": "#",
         "📦 PyPi Package": "https://pypi.org/project/neer-match/",
         "📦 R Package": "https://github.com/pi-kappa-devel/r-neer-match",
         "📖 R Docs": "https://r-neer-match.pikappa.eu",
     },
 }
 
-
 html_favicon = "_static/img/favicon/favicon.ico"
+
+html_css_files = [
+    "css/extra.css",
+    "https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css",
+]
+
+html_js_files = [
+    "https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js",
+    "https://cdn.datatables.net/2.1.8/js/dataTables.min.js",
+]

@@ -1,5 +1,5 @@
-Global Explainability Documentation
-===================================
+Global Explainability
+=====================
 
 .. automodule:: neer_match.global_explainability
     :members:

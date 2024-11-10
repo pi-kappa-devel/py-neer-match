@@ -1,5 +1,5 @@
-Local Explainability Documentation
-==================================
+Local Explainability
+====================
 
 .. automodule:: neer_match.local_explainability
     :members:

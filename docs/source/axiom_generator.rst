@@ -1,5 +1,5 @@
-Axiom Generator Documentation
-=============================
+Axiom Generator
+===============
 
 .. automodule:: neer_match.axiom_generator
     :members:

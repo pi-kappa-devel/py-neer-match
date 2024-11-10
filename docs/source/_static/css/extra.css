@@ -1,0 +1,11 @@
+#main-content .caption {
+  display: none;
+}
+
+#main-content p {
+  text-align: justify;
+}
+
+#sidebar > li {
+  display: none;
+}
