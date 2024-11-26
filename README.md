@@ -101,28 +101,27 @@ smap = SimilarityMap(
 model = NSMatchingModel(smap)
 
 # 2) compile
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01))
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 
 # 3) train
 model.fit(
     left, right, matches,
-    epochs=10, batch_size=16,
-    log_mod_n=1,
+    epochs=161, batch_size=16,
+    log_mod_n=20,
 )
 ```
 
     | Epoch      | BCE        | Recall     | Precision  | F1         | Sat        |
-    | 0          | 7.0392     | 0.5897     | 0.2054     | 0.3046     | 0.7343     |
-    | 1          | 6.6445     | 0.0000     | nan        | nan        | 0.7451     |
-    | 2          | 6.4059     | 0.0000     | nan        | nan        | 0.7520     |
-    | 3          | 6.1831     | 0.0000     | nan        | nan        | 0.7591     |
-    | 4          | 5.9807     | 0.0000     | nan        | nan        | 0.7664     |
-    | 5          | 5.8045     | 0.0000     | nan        | nan        | 0.7736     |
-    | 6          | 5.6597     | 0.0000     | nan        | nan        | 0.7807     |
-    | 7          | 5.5508     | 0.0000     | nan        | nan        | 0.7874     |
-    | 8          | 5.4804     | 0.0000     | nan        | nan        | 0.7938     |
-    | 9          | 5.4492     | 0.0000     | nan        | nan        | 0.7997     |
-    Training finished at Epoch 9 with DL loss 5.4492 and Sat 0.7997
+    | 0          | 7.0906     | 0.5897     | 0.1643     | 0.2570     | 0.7334     |
+    | 20         | 8.5553     | 0.0000     | nan        | nan        | 0.8391     |
+    | 40         | 12.4309    | 0.0000     | nan        | nan        | 0.8469     |
+    | 60         | 16.1034    | 0.0000     | nan        | nan        | 0.8489     |
+    | 80         | 18.4529    | 0.0000     | nan        | nan        | 0.8496     |
+    | 100        | 19.7995    | 0.0000     | nan        | nan        | 0.8497     |
+    | 120        | 20.8475    | 0.0000     | nan        | nan        | 0.8498     |
+    | 140        | 21.7300    | 0.0000     | nan        | nan        | 0.8498     |
+    | 160        | 22.4964    | 0.0000     | nan        | nan        | 0.8498     |
+    Training finished at Epoch 160 with DL loss 22.4964 and Sat 0.8498
 
 # Installation
 

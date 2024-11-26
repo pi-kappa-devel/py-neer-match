@@ -1,0 +1,146 @@
+---
+title: "Neural-symbolic Entity Matching"
+---
+
+The example introduces the package's entity matching functionality using neural-symbolic learning. The goals of the example are (i) to introduce the available options, (ii) discuss some aspects of the underlying model logic, and (iii) contrast the neural-symbolic functionality to that of purely deep learning entity matching. For an introduction to basic concepts and conventions of the package one may consult the [Entity Matching with Similarity Maps and Deep Learning](dl-matching) example (henceforth Example 1). For the reasoning capabilities of the package, set the [Reasoning](reasoning.html) example.
+
+## Prerequisites
+Load the libraries we will use and set the seed for reproducibility.
+```{python}
+#| label: setup
+#| output: false
+
+from neer_match.matching_model import NSMatchingModel
+from neer_match.similarity_map import SimilarityMap
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import random
+import tensorflow as tf
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+```
+
+## Preprocessing
+We use the gaming data of [Example 1](dl-matching). Similar to the deep learning case, the neural-symbolic functionality leverages similarity maps and expects the same structure of datasets as input. The concepts and requirements are detailed in [Example 1](dl-matching), we abstain from detailing them here for brevity. In summary, our preprocessing stage constructs three datasets `left`, `right`, and `matches`, where `left` has 36 records, `right` has 39 records, and `matches` has the indices of the matching records in `left` and `right`. 
+
+```{python}
+#| label: data-setup
+#| include: false
+
+with open("../../../../test/__init__.py", "r") as ifh:
+    exec(ifh.read())
+
+def prepare_data():
+    return left, right, matches
+```
+
+```{python}
+#| label: prepare_data
+
+left, right, matches = prepare_data()
+```
+
+## Matching Model Setup
+For simplicity, we employ the similarity map we used in [Example 1](dl-matching).
+
+```{python}
+#| label: similarity-map
+
+instructions = {
+    "title": ["jaro_winkler"],
+    "platform": ["levenshtein", "discrete"],
+    "year": ["euclidean", "discrete"],
+    "developer~dev": ["jaro"]
+}
+
+similarity_map = SimilarityMap(instructions)
+print(similarity_map)
+```
+
+Matching models using neural-symbolic learning are constructed using the `NSMatchingModel` class. The constructor expects a similarity map object, exactly as in the pure deep learning case. 
+
+```{python}
+#| label: make-ns-matching-model
+
+model = NSMatchingModel(similarity_map)
+```
+
+Although the exposed interface is similar to the deep learning model, the underlying class designs are different. The `DLMatchingModel` class inherits from the `tensorflow.keras.Model` class, while the `NSMatchingModel` uses a custom training loop. Nonetheless, the `NSMatchingModel` class exposes `compile`, `fit`, `evaluate`, `predict`, and `suggest` functions to ensure that the calling conventions in the user space are as consistent as possible between the two classes.
+
+For instance, the `compile` methods of the `NSMatchingModel` can be used to set the optimizer used during training.
+```{python}
+#| label: compile-ns-model
+
+model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001))
+```
+
+## Model Training
+The model is fitted using the `fit` function (see the [fit documentation](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.NSMatchingModel.fit) for details). The underline training loop of the neural-symbolic model is custom. Training treats the [field pair](https://py-neer-match.pikappa.eu/field_pair_network.html#neer_match.field_pair_network.FieldPairNetwork) and [record pair](https://py-neer-match.pikappa.eu/record_pair_network.html#neer_match.record_pair_network.RecordPairNetwork) models as fuzzy logic predicates. It adjusts their parameters to satisfy the following logic. First, for every matching example, all the field predicates and the record predicate should be (fuzzily) true. This rule is motivated by the observations that true record matches should in principle constitute matches in all subsets of their associated fields. Second, at least one of the field predicates and the record predicate should by (fuzzily) false for every non matching example. This rule is motivated by the observation that non matches should be distinct in at least one of their associated fields, because if they are not, then, in principle, they constitute a match.
+
+The `fit` function expects `left`, `right`, and `matches` data sets. As in the deep learning case, the `mismatch_share` parameter controls the ratio of counterexamples to matches. The parameter `satisfiability_weight` is a float value between 0 and 1 that controls the weight of the satisfiability loss in the total loss function. The default value is 1.0, i.e., the training process considers only the fuzzy logic axioms. A value of 0.0 means that only the binary cross entropy loss is considered, which essentially reduces the model to a deep learning model. Any value between 0 and 1 trains a hybrid model that balances the two losses. 
+
+Finally, logging can be customized by setting the parameters `verbose` and `log_mod_n`. The `verbose` parameter controls whether the training process prints the loss values at each epoch. The `log_mod_n` parameter controls the frequency of the logging. For instance, if `log_mod_n = 5`, the training process logs the loss values every 5 epochs. The default value is 1.
+
+```{python}
+#| label: fit-ns-model
+#| output: false
+
+model.fit(
+    left,
+    right,
+    matches,
+    epochs=100,
+    batch_size=16,
+    verbose=1,
+    log_mod_n=10
+)
+```
+
+## Predictions and Suggestions
+Matching predictions and suggestions follow the same calling conventions as corresponding deep learning member functions. Predictions can be obtained by calling `predict` and passing the `left` and `right` datasets. The returned prediction probabilities are stored in row-major order. First, the matching probabilities of the first row of `left` with all the rows of `right` are given. Then, the probabilities of the second row of `left` with all the rows of `right` are given, and so on. In total, the `predict` function returns a vector with rows equal to the product of the number of rows in the `left` and `right` data sets.
+```{python}
+#| label: ns-model-predictions
+#| fig.alt: "CDF of DL Matching Predictions"
+
+predictions = model.predict(left, right)
+
+fig, ax = plt.subplots()
+counts, bins= np.histogram(predictions, bins = 100)
+cdf = np.cumsum(counts)/np.sum(counts)
+ax.plot(bins[1:], cdf)
+ax.set_xlabel("Matching Prediction")
+ax.set_ylabel("Cumulative Density")
+plt.show()
+```
+
+The `suggest` function also expects the `left` and `right` datasets as input. The function returns the top `count` matching predictions of the model for each row of the `left` dataset. The prediction probabilities of `predict` are grouped by the indices of the `left` dataset and sorted in descending order. 
+```{python}
+#| label: ns-model-suggestions
+#| output: false
+
+suggestions = model.suggest(left, right, count = 3)
+suggestions["true_match"] = suggestions.loc[:, ["left", "right"]].apply(
+    lambda x: any((x.left == matches.left) & (x.right==matches.right)), axis=1
+)
+suggestions = suggestions.join(
+    matches.iloc[-no_duplicates:,:].assign(duplicate=True).set_index(['left', 'right']),
+    on = ["left", "right"],
+    how = "left"
+).fillna(False)
+
+suggestions
+```
+
+```{python}
+#| label: ns-model-suggestions-output
+#| echo: false
+
+suggestions.to_html()
+```
+
+<script>
+let table = new DataTable('.dataframe');
+</script>

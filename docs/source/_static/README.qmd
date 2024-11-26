@@ -42,6 +42,13 @@ To train the model you need to provide three datasets. Two datasets should conta
 ```{python}
 #| label: data-setup
 #| include: false
+import numpy as np
+import random
+import tensorflow as tf
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
 
 with open("../../../test/__init__.py", "r") as ifh:
     exec(ifh.read())
@@ -72,13 +79,13 @@ smap = SimilarityMap(
 model = NSMatchingModel(smap)
 
 # 2) compile
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01))
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 
 # 3) train
 model.fit(
     left, right, matches,
-    epochs=10, batch_size=16,
-    log_mod_n=1,
+    epochs=161, batch_size=16,
+    log_mod_n=20,
 )
 ```
 

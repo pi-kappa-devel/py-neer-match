@@ -1,0 +1,4 @@
+*.md
+*.quarto_ipynb
+_static/.quarto
+_static/examples/*_files

@@ -2,7 +2,7 @@
 title: "Entity Matching with Similarity Maps and Deep Learning"
 ---
 
-The example concisely introduces the basic concepts and functionality of the package. Its goals are (i) to bring the reader up to speed with how to use the package to fit entity-matching models and (ii) to familiarize the reader with the basic concepts that are used in the documentation and naming conventions of the package. For simplicity, we use a deep learning matching model for this example. Examples of neural-symbolic matching models are given in the [Neural-symbolic matching](ns-matching.html) and [Reasoning](reasoning.html) examples.
+The example concisely introduces the basic concepts and functionality of the package. Its goals are (i) to bring the reader up to speed with how to use the package to fit entity-matching models and (ii) to familiarize the reader with the basic concepts that are used in the documentation and naming conventions of the package. For simplicity, we use a deep learning matching model for this example. Examples of neural-symbolic matching models are given in the [Neural-symbolic Entity Matching](ns-matching) and [Reasoning](reasoning.html) vignettes.
 
 ## Prerequisites
 Load the libraries we will use and set the seed for reproducibility.
@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
-import rapidfuzz
 import tensorflow as tf
 
 random.seed(42)
@@ -25,10 +24,10 @@ tf.random.set_seed(42)
 ```
 
 ## Preprocessing
-The preprocessing stage aims to bring the data in a form compatible with the `neermatch` package's calling conventions. The package expects the data to be in the form of two data frames, `left` and `right`, that contain the entities to be matched. The package also expects a data frame, matches, that contains the indices of the matching entities in the `left` and `right` data frames. We illustrate the calling convention by constructing a toy example.
+The preprocessing stage aims to bring the data in a form compatible with the `neermatch` package's calling conventions. The package expects the data to be in the form of two data frames, `left` and `right`, that contain the entities to be matched. The package also expects a third data frame, `matches`, that contains the indices of the matching entities in the `left` and `right` data frames. We illustrate the calling convention by constructing a toy example.
 
 ### Left Data Set
-The data used in this example is constructed from a subset of the `game_reviews` dataset shipped with the `R` version of the package (see the [game_review documentation](https://r-neer-match.pikappa.eu/reference/game_reviews.html)). The subset is created by selecting all the records in `game_reviews` having titles starting with either `"Metal Slug"` or `"Metal Gear"`.  The selection results are hard-coded here to keep the example code left-contained. Following the package's naming convention, we name the resulting data frame left.
+The data used in this example is constructed from a subset of the `game_reviews` dataset shipped with the `R` version of the package (see the [game_review documentation](https://r-neer-match.pikappa.eu/reference/game_reviews.html)). The subset is created by selecting all the records in `game_reviews` having titles starting with either `"Metal Slug"` or `"Metal Gear"`.  The selection results are hard-coded here to keep the example code self-contained. Following the package's naming convention, we name the resulting data frame left.
 ```{python}
 #| label: left-data
 
@@ -105,9 +104,9 @@ left = pd.DataFrame(
 ### Right Data Set
 What is the `right` data frame in this example? We construct the `right` data frame by copying the `left` data frame and introducing noise in the `title` and `developer` columns. Up to three characters are randomly removed from the `title` column, and up to two characters are randomly removed from the `developer` column.
 
-In addition, we create three duplicate matching records on the `right` dataset to illustrate that the matching models of the package can be used to link datasets with records/entities having either one-to-many or many-to-many relations.
+In addition, we create three duplicate matching records on the `right` data frame to illustrate that the matching models of the package can be used to link datasets with records/entities having either one-to-many or many-to-many relations.
 
-By construction, the `left` and `right` datasets in our examples have the same columns. In practice, this is not always the case. For such cases, the `neermatch` package supports specifying different columns of the `left` and `right` datasets. To illustrate how the package can be used in such cases, we rename the `developer` column in the `right` dataset to `dev`.
+By construction, the `left` and `right` data frames in our examples have the same columns. In practice, this is not always the case. For such cases, the `neermatch` package supports specifying different columns of the `left` and `right` data frames. To illustrate how the package can be used in such cases, we rename the `developer` column in the `right` data frame to `dev`.
 
 ```{python}
 #| label: right-data
@@ -143,7 +142,7 @@ right.rename(columns={"developer": "dev"}, inplace=True)
 ```
 
 ### Matches Data Set
-The matching examples are passed to the matching models as pairs of indices. We do not need to provide non-matching examples. The models automatically pick non-matching examples from the Cartesian product of the `left` and `right` datasets as long as their indices are not in the `matches` dataset. For this application, the matches are constructed by the rows of the `left` and `right` datasets with the same index and the `{python} no_duplicates` duplicate matches we created. 
+The matching examples are passed to the matching models as pairs of indices. We do not need to provide non-matching examples. The models automatically pick non-matching examples from the Cartesian product of the `left` and `right` data frames as long as their indices are not in the `matches` data frame. For this application, the matches are constructed by the rows of the `left` and `right` data frames with the same index and the `{python} no_duplicates` duplicate matches we created. 
 ```{python}
 #| label: matches-data
 
@@ -186,7 +185,7 @@ A matching model object is constructed by passing the similarity map instruction
 model = DLMatchingModel(similarity_map)
 ```
 
-The model is compiled in the usual way. The compile function wraps the [tensorflow.keras.Model.compile](https://www.tensorflow.org/api_docs/python/tf/keras/Model#compile) function, so all the functionality and options in the latter can be used here.
+The model is compiled in the usual (keras) way. The compile function wraps the [tensorflow.keras.Model.compile](https://www.tensorflow.org/api_docs/python/tf/keras/Model#compile) function, so all the functionality and options in the latter can be used here.
 ```{python}
 #| label: compile-dl-model
 
@@ -197,9 +196,9 @@ model.compile(
 ```
 
 ## Matching Model Fit and Evaluation
-The model is fitted using the `fit` function (see the [fit documentation](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.DLMatchingModel.fit) for details). The `fit` function extends the functionality of [tensorflow.keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit) to accommodate the entity matching problem requirements. Firstly, instead of passing features and label arguments, `fit` expects the `left`, `right`, and `matches` data sets. 
+The model is fitted using the `fit` function (see the [fit documentation](https://py-neer-match.pikappa.eu/matching_model.html#neer_match.matching_model.DLMatchingModel.fit) for details). The `fit` function extends the functionality of [tensorflow.keras.Model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit) to accommodate the entity matching problem requirements. Firstly, instead of passing features and label arguments, `fit` expects the `left`, `right`, and `matches` data frames. 
 
-During training, counterexamples of matching records are automatically selected from the cross-product of left and right data sets based on the `mismatch_share` parameter. Including all the non-matching examples can lead to a highly unbalanced matching dataset. For each record in the `left` data set, appearing in k examples in the `matches` data set, there are up to `n - k` counterexamples, where `n` is the number of records in the `right` data set. The `mismatch_share` parameter controls the ratio of counterexamples to matches. For instance, if `mismatch_share = 0.5`, the `encode` function selects 50% of the possible counterexamples for each match. The counterexamples are selected randomly from the `right` dataset. 
+During training, counterexamples of matching records are automatically selected from the cross-product of left and right data frames based on the `mismatch_share` parameter. Including all the non-matching examples can lead to a highly unbalanced matching dataset. For each record in the `left` data set, appearing in k examples in the `matches` data set, there are up to `n - k` counterexamples, where `n` is the number of records in the `right` data set. The `mismatch_share` parameter controls the ratio of counterexamples to matches. For instance, if `mismatch_share = 0.5`, the `encode` function selects 50% of the possible counterexamples for each match. The counterexamples are selected randomly from the `right` dataset. 
 
 For instance, the `left` and `right` data sets in this example have `{python} left.shape[0]` and `{python} right.shape[0]` records, respectively, and the `matches` data set has `{python} matches.shape[0]` records. This allows us to construct `{python} left.shape[0] * right.shape[0] - matches.shape[0]` non-matching examples. We set `mismatch_share = 0.2`, which means that for each matching example provided in `matches`, we get `{python} int(0.2*(matches.shape[0] - 1))` non-matching examples (the integer part, i.e., the floor, of the number of counterexamples used).
 

@@ -72,13 +72,12 @@ html_static_path = ["_static"]
 
 html_logo = "_static/img/logo.png"
 html_theme_options = {
-    "github_user": "pi-kappa-devel",
-    "extra_nav_links": {
-        "Relevant Links": "#",
-        "📦 PyPi Package": "https://pypi.org/project/neer-match/",
-        "📦 R Package": "https://github.com/pi-kappa-devel/r-neer-match",
-        "📖 R Docs": "https://r-neer-match.pikappa.eu",
-    },
+    "navbar_links": [
+        ("Links", "links")
+    ],
+    'navbar_sidebarrel': False,
+    "source_link_position": "footer",
+    "bootswatch_theme": "sandstone",
 }
 
 html_favicon = "_static/img/favicon/favicon.ico"

@@ -9,6 +9,7 @@ Examples
    :caption: Examples
 
    dl-matching.md
+   ns-matching.md
 
 Documentation
 =============
