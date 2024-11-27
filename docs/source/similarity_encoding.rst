@@ -1,5 +1,5 @@
-Similarity Map
-==============
+Similarity Encoding
+===================
 
 .. automodule:: neer_match.similarity_encoding
     :members:

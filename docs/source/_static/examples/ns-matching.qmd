@@ -2,7 +2,7 @@
 title: "Neural-symbolic Entity Matching"
 ---
 
-The example introduces the package's entity matching functionality using neural-symbolic learning. The goals of the example are (i) to introduce the available options, (ii) discuss some aspects of the underlying model logic, and (iii) contrast the neural-symbolic functionality to that of purely deep learning entity matching. For an introduction to basic concepts and conventions of the package one may consult the [Entity Matching with Similarity Maps and Deep Learning](dl-matching) example (henceforth Example 1). For the reasoning capabilities of the package, set the [Reasoning](reasoning.html) example.
+The example introduces the package's entity matching functionality using neural-symbolic learning. The goals of the example are (i) to introduce the available options, (ii) discuss some aspects of the underlying model logic, and (iii) contrast the neural-symbolic functionality to that of purely deep learning entity matching. For an introduction to basic concepts and conventions of the package one may consult the [Entity Matching with Similarity Maps and Deep Learning](dl-matching) example (henceforth Example 1). For the reasoning capabilities of the package, set the [Reasoning](rr-matching) example.
 
 ## Prerequisites
 Load the libraries we will use and set the seed for reproducibility.
@@ -24,7 +24,7 @@ tf.random.set_seed(42)
 ```
 
 ## Preprocessing
-We use the gaming data of [Example 1](dl-matching). Similar to the deep learning case, the neural-symbolic functionality leverages similarity maps and expects the same structure of datasets as input. The concepts and requirements are detailed in [Example 1](dl-matching), we abstain from detailing them here for brevity. In summary, our preprocessing stage constructs three datasets `left`, `right`, and `matches`, where `left` has 36 records, `right` has 39 records, and `matches` has the indices of the matching records in `left` and `right`. 
+We use the gaming data of [Example 1](dl-matching). Similar to the deep learning case, the neural-symbolic functionality leverages similarity maps and expects the same structure of datasets as inputs. The concepts and requirements are detailed in [Example 1](dl-matching), we abstain from detailing them here for brevity. In summary, our preprocessing stage constructs three datasets `left`, `right`, and `matches`, where `left` has 36 records, `right` has 39 records, and `matches` has the indices of the matching records in `left` and `right`. 
 
 ```{python}
 #| label: data-setup
@@ -70,7 +70,7 @@ model = NSMatchingModel(similarity_map)
 
 Although the exposed interface is similar to the deep learning model, the underlying class designs are different. The `DLMatchingModel` class inherits from the `tensorflow.keras.Model` class, while the `NSMatchingModel` uses a custom training loop. Nonetheless, the `NSMatchingModel` class exposes `compile`, `fit`, `evaluate`, `predict`, and `suggest` functions to ensure that the calling conventions in the user space are as consistent as possible between the two classes.
 
-For instance, the `compile` methods of the `NSMatchingModel` can be used to set the optimizer used during training.
+For instance, the `compile` method of the `NSMatchingModel` can be used to set the optimizer used during training.
 ```{python}
 #| label: compile-ns-model
 

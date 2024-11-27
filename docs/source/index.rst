@@ -10,6 +10,7 @@ Examples
 
    dl-matching.md
    ns-matching.md
+   rr-matching.md
 
 Documentation
 =============
@@ -24,6 +25,7 @@ Documentation
    global_explainability
    local_explainability
    matching_model
+   reasoning
    record_pair_network
    similarity_encoding
    similarity_map

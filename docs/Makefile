@@ -25,7 +25,8 @@ help:
 	sed -i 's/\[MIT license\](LICENSE.txt)/<a href="LICENSE.html">MIT license<\/a>/g' \
 		"$(SOURCEDIR)/README.md"
 	sed -i 's/docs\/source\///g' "$(SOURCEDIR)/README.md"
-	for file in "dl-matching.qmd" "ns-matching.qmd"; do \
+	for path in $(EXAMPLEDIR)/*.qmd; do \
+		file=$$(basename "$$path"); \
 		quarto render "$(EXAMPLEDIR)/$${file}" -t gfm; \
 		mv "$(EXAMPLEDIR)/$${file%.qmd}.md" "$(SOURCEDIR)/$${file%.qmd}.md"; \
 		sed -i "s/$${file%.qmd}_files/_static\/examples\/$${file%.qmd}_files/g" \

@@ -2,7 +2,7 @@
 title: "Entity Matching with Similarity Maps and Deep Learning"
 ---
 
-The example concisely introduces the basic concepts and functionality of the package. Its goals are (i) to bring the reader up to speed with how to use the package to fit entity-matching models and (ii) to familiarize the reader with the basic concepts that are used in the documentation and naming conventions of the package. For simplicity, we use a deep learning matching model for this example. Examples of neural-symbolic matching models are given in the [Neural-symbolic Entity Matching](ns-matching) and [Reasoning](reasoning.html) vignettes.
+The example concisely introduces the basic concepts and functionality of the package. Its goals are (i) to bring the reader up to speed with how to use the package to fit entity-matching models and (ii) to familiarize the reader with the basic concepts that are used in the documentation and naming conventions of the package. For simplicity, we use a deep learning matching model for this example. Examples of neural-symbolic matching models are given in the [Neural-symbolic Entity Matching](ns-matching) and [Reasoning](rr-matching) vignettes.
 
 ## Prerequisites
 Load the libraries we will use and set the seed for reproducibility.

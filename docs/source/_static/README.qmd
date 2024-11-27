@@ -70,10 +70,10 @@ left, right, matches = prepare_data()
 # 1) customize according to the fields in your data
 smap = SimilarityMap(
     {
-        "title": ["jaro", "levenshtein"],
-        "developer~dev": ["jaro_winkler"],
-        "platform": ["lcsseq"],
-        "year": ["gaussian"],
+        "title": ["jaro_winkler"],
+        "platform": ["levenshtein", "discrete"],
+        "year": ["euclidean", "discrete"],
+        "developer~dev": ["jaro"]
     }
 )
 model = NSMatchingModel(smap)
@@ -84,8 +84,8 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 # 3) train
 model.fit(
     left, right, matches,
-    epochs=161, batch_size=16,
-    log_mod_n=20,
+    epochs=51, batch_size=16,
+    log_mod_n=10,
 )
 ```
 

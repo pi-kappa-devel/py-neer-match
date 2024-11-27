@@ -92,10 +92,10 @@ left, right, matches = prepare_data()
 # 1) customize according to the fields in your data
 smap = SimilarityMap(
     {
-        "title": ["jaro", "levenshtein"],
-        "developer~dev": ["jaro_winkler"],
-        "platform": ["lcsseq"],
-        "year": ["gaussian"],
+        "title": ["jaro_winkler"],
+        "platform": ["levenshtein", "discrete"],
+        "year": ["euclidean", "discrete"],
+        "developer~dev": ["jaro"]
     }
 )
 model = NSMatchingModel(smap)
@@ -106,22 +106,19 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 # 3) train
 model.fit(
     left, right, matches,
-    epochs=161, batch_size=16,
-    log_mod_n=20,
+    epochs=51, batch_size=16,
+    log_mod_n=10,
 )
 ```
 
     | Epoch      | BCE        | Recall     | Precision  | F1         | Sat        |
-    | 0          | 7.0906     | 0.5897     | 0.1643     | 0.2570     | 0.7334     |
-    | 20         | 8.5553     | 0.0000     | nan        | nan        | 0.8391     |
-    | 40         | 12.4309    | 0.0000     | nan        | nan        | 0.8469     |
-    | 60         | 16.1034    | 0.0000     | nan        | nan        | 0.8489     |
-    | 80         | 18.4529    | 0.0000     | nan        | nan        | 0.8496     |
-    | 100        | 19.7995    | 0.0000     | nan        | nan        | 0.8497     |
-    | 120        | 20.8475    | 0.0000     | nan        | nan        | 0.8498     |
-    | 140        | 21.7300    | 0.0000     | nan        | nan        | 0.8498     |
-    | 160        | 22.4964    | 0.0000     | nan        | nan        | 0.8498     |
-    Training finished at Epoch 160 with DL loss 22.4964 and Sat 0.8498
+    | 0          | 7.1111     | 1.0000     | 0.2500     | 0.4000     | 0.7330     |
+    | 10         | 6.4167     | 0.0000     | nan        | nan        | 0.7512     |
+    | 20         | 4.9687     | 0.0000     | nan        | nan        | 0.8263     |
+    | 30         | 3.4703     | 0.0000     | nan        | nan        | 0.8527     |
+    | 40         | 1.2650     | 1.0000     | 0.9750     | 0.9873     | 0.8942     |
+    | 50         | 0.6165     | 1.0000     | 0.9750     | 0.9873     | 0.9171     |
+    Training finished at Epoch 50 with DL loss 0.6165 and Sat 0.9171
 
 # Installation
 

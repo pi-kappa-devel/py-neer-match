@@ -1,0 +1,160 @@
+---
+title: "Reasoning with Neural-symbolic Entity Matching"
+---
+
+The example illustrates the package's out-of-the-box reasoning functionality. The goals of the example are (i) to introduce the available options and (ii) discuss the underlying logic of the reasoning. For an introduction to basic concepts and conventions of the package one may consult the [Entity Matching with Similarity Maps and Deep Learning](dl-matching) example (henceforth Example 1). For an introduction to the package's neural-symbolic entity matching functionality, one may consult the [Neural-Symbolic Learning](ns-matching) example (henceforth Example 2).
+
+## Prerequisites
+Load the libraries we will use and set the seed for reproducibility.
+```{python}
+#| label: setup
+#| output: false
+
+from neer_match.reasoning import RefutationModel
+from neer_match.similarity_map import SimilarityMap
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import random
+import tensorflow as tf
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+```
+
+## Preprocessing
+We use the gaming data of [Example 1](dl-matching) and [Example 2](ns-matching). Similar to the deep and the neural-symbolic cases, the reasoning functionality leverages similarity maps and expects the same structure of datasets as inputs. More details are given in [Example 1](dl-matching) and [Example 2](ns-matching). In summary, our preprocessing stage constructs three datasets `left`, `right`, and `matches`, where `left` has 36 records, `right` has 39 records, and `matches` has the indices of the matching records in `left` and `right`. 
+
+```{python}
+#| label: data-setup
+#| include: false
+
+with open("../../../../test/__init__.py", "r") as ifh:
+    exec(ifh.read())
+
+def prepare_data():
+    return left, right, matches
+```
+
+```{python}
+#| label: prepare_data
+
+left, right, matches = prepare_data()
+left["mock"] = np.random.randint(0, 1e5, left.shape[0])
+right["mock"] = np.random.randint(0, 1e5, right.shape[0])
+```
+
+## Refutation Model Setup
+We employ the similarity map we used in [Example 1](dl-matching) and [Example 2](ns-matching).
+
+```{python}
+#| label: similarity-map
+
+instructions = {
+    "title": ["jaro_winkler"],
+    "platform": ["levenshtein", "discrete"],
+    "year": ["euclidean", "discrete"],
+    "developer~dev": ["jaro"],
+    "mock": ["euclidean"],    
+}
+
+similarity_map = SimilarityMap(instructions)
+print(similarity_map)
+```
+
+The out-of-the-box reasoning that the `neer_match` package provides allows one to easily refute the significance of one or more conjectured associations in detecting entity matches. The functionality is provided by the class `RefutationModel`. The `RefutationModel` inherits from the `NSMatchingModel` class and provides additional functionality allowing one to use refutation logic. 
+
+```{python}
+#| label: make-rr-matching-model
+
+model = RefutationModel(similarity_map)
+```
+
+All the member functions exposed by `NSMatchingModel` can be directly used with the `RefutationModel` class. This includes the functions `compile`, `fit`, `evaluate`, `predict`, and `suggest` that are used to train, evaluate, and use entity matching models. The functions `compile`, `evaluate`, `predict`, and `suggest` do not modify the behavior of the underlying `NSMatchingModel` class. For example, the `compile` method of the `NSMatchingModel` can be used to set the optimizer used during training.
+```{python}
+#| label: compile-rr-model
+
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=0.001,
+            decay_steps=10,
+            decay_rate=0.96,
+            staircase=True,
+        )
+    )
+)
+```
+
+## Model Training
+The model is fitted using the `fit` function (see the [fit documentation](http://127.0.0.1:8000/reasoning.html#neer_match.reasoning.RefutationModel.fit) for details). Similar to the deep and neural-symbolic entity matching models, the `fit` function expects `left`, `right`, and `matches` data sets. Moreover, the `mismatch_share` parameter controls the ratio of counterexamples to matches. The parameter `satisfiability_weight` controls the mixing of the binary cross entropy and matching axioms' satisfiability during model training. Finally, logging verbosity and frequency are controlled by the parameters `verbose` and `log_mod_n` (see also [Example 2](ns-matching)). 
+
+More importantly, the refutation model fit method introduces four new parameters, namely `refutation`, `penalty_threshold`, `penalty_scale`, and `penalty_decay`, to guide the model's refutation reasoning. The `refutation` parameter is either a field pair association of a dictionary with a signle field pair association as key and a list of similarities as value. In the first case, the model will try to refute the association between the two fields using the similarities documented in its similarity map. In the second case, the model will try to refute the association between the field pair using only the similarities in the list. The refutation claim is that the supplied field pair's similarities are a (fuzzy) necessary condition for entity matching, i.e., whenever a record pair constitutes a match, the supplied field pair's similarities are close to one. Refutation involves minimizing the satisfiability of the refutation claim, while penalizing states for which the entity matching axioms are not satisfied. 
+
+The `penalty_threshold` parameter controls the threshold for the penalty. If the satisfiability of the matching axioms are below the threshold, then the model's objective has a linear penalty structure. The penalty is proportional to the difference between the threshold and the satisfiability of the matching axioms, with scale parameter equal to `penalty_scale`. If the satisfiability of the matching axioms is above the threshold, the model's objective has an exponentially decaying penalty structure. The exponential decay is controlled by the `penalty_decay` parameter. The default values for the `penalty_threshold`, `penalty_scale`, and `penalty_decay` are 0.95, 1.0, and 0.1, respectively.
+
+The following example attempts to (fuzzily) refute the claim that title matching is a necessary condition for the record matching of the left and right datasets. The training results indicate that the claim cannot be refuted. At the end of the training, the refutation claim has a satisfiability value closer to one than to zero, while the matching axiom value is also close to one. This indicates, that the optimizer fails to find a network parameter configuration for which the claim can be refuted (has small satisfiability) while at the same time the matching axioms are satisfied.
+```{python}
+#| label: fit-rr-model-title
+#| output: true
+
+model.fit(
+    left,
+    right,
+    matches,
+    refutation="title",
+    epochs=51,
+    penalty_threshold=0.99,
+    penalty_scale=2.0,
+    penalty_decay=0.1,
+    batch_size=12,
+    verbose=1,
+    log_mod_n=10,
+)
+``` 
+
+In contrast, the following example succeeds in refuting the claim that randomly generated columns are necessary for entity matching. Two mock columns with independently drawn random values are introduced in the left and right data sets and a corresponding association is added to the similarity map. At the end of the training, the optimizer finds a configuration with very low satisfiability for the refutation claim, while keeping the satisfiability of the matching axioms above $0.61$.
+```{python}
+#| label: fit-rr-model-mock
+#| output: true
+
+left["mock"] = np.random.randint(0, 1e5, left.shape[0])
+right["mock"] = np.random.randint(0, 1e5, right.shape[0])
+
+instructions = {
+    "title": ["jaro_winkler"],
+    "platform": ["levenshtein", "discrete"],
+    "year": ["euclidean", "discrete"],
+    "developer~dev": ["jaro"],
+    "mock": ["euclidean"],
+}
+
+similarity_map = SimilarityMap(instructions)
+
+model = RefutationModel(similarity_map)
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=0.001,
+            decay_steps=10,
+            decay_rate=0.96,
+            staircase=True,
+        )
+    )
+)
+
+model.fit(
+    left,
+    right,
+    matches,
+    refutation="mock",
+    epochs=51,
+    penalty_threshold=0.99,
+    penalty_scale=2.0,
+    penalty_decay=0.1,
+    batch_size=12,
+    verbose=1,
+    log_mod_n=10,
+)
+```
