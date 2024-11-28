@@ -209,49 +209,61 @@ entry-spacing="0">
 <div id="ref-abadi2015" class="csl-entry">
     Abadi, Martín, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen, Craig Citro, Greg S. Corrado, et al. 2015. “TensorFlow: Large-Scale Machine Learning on Heterogeneous Systems.” <https://www.tensorflow.org/>.
 </div>
+<br>
 
 <div id="ref-badreddine2022" class="csl-entry">
     Badreddine, Samy, Artur d’Avila Garcez, Luciano Serafini, and Michael Spranger. 2022. “Logic Tensor Networks.” *Artificial Intelligence* 303: 103649. <https://doi.org/10.1016/j.artint.2021.103649>.
 </div>
+<br>
 
 <div id="ref-chollet2015" class="csl-entry">
     Chollet, François et al. 2015. “Keras.” <https://keras.io>.
 </div>
+<br>
 
 <div id="ref-ding2024" class="csl-entry">
     Ding, Huahua, Chaofan Dai, Yahui Wu, Wubin Ma, and Haohao Zhou. 2024. “SETEM: Self-ensemble Training with Pre-trained Language Models for Entity Matching.” <https://dl.acm.org/doi/10.1016/j.knosys.2024.111708>.
 </div>
+<br>
 
 <div id="ref-huang2022" class="csl-entry">
     Huang, Jiacheng, Wei Hu, Zhifeng Bao, Qijin Chen, and Yuzhong Qu. 2022. “Deep Entity Matching with Adversarial Active Learning.” <https://dl.acm.org/doi/abs/10.1007/s00778-022-00745-1>.
 </div>
+<br>
 
 <div id="ref-jin2021" class="csl-entry">
     Jin, Di, Bunyamin Sisman, Hao Wei, Xin Luna Dong, and Danai Koutra. 2021. “Deep Transfer Learning for Multi-Source Entity Linkage via Domain Adaptation.” <https://dl.acm.org/doi/10.14778/3494124.3494131>.
 </div>
+<br>
 
 <div id="ref-karapanagiotis2023" class="csl-entry">
     Karapanagiotis, Pantelis, and Marius Liebald. 2023. “Entity Matching with Similarity Encoding: A Supervised Learning Recommendation Framework for Linking (Big) Data.” <http://dx.doi.org/10.2139/ssrn.4541376>.
 </div>
+<br>
 
 <div id="ref-li2020" class="csl-entry">
     Li, Yuliang, Jinfeng Li, Yoshihiko Suhara, AnHai Doan, and Wang-Chiew Ta. 2020. “Deep Entity Matching with Pre-Trained Language Models.” <https://dl.acm.org/doi/10.14778/3421424.3421431>.
 </div>
+<br>
 
 <div id="ref-low2024" class="csl-entry">
     Low, Jwen Fai, Benjamin C.M. Fung, and Pulei Xiong. 2024. “Better Entity Matching with Transformers Through Ensembles.” <https://www.sciencedirect.com/science/article/pii/S0950705124003137?dgcid=rss_sd_all>.
 </div>
+<br>
 
 <div id="ref-mudgal2018" class="csl-entry">
     Mudgal, Sidharth, Han Li, Theodoros Rekatsinas, AnHai Doan, Youngchoon Park, Ganesh Krishnan, Rohit Deep, Esteban Arcaute, and Vijay Raghavendra. 2018. “Deep Learning for Entity Matching: A Design Space Exploration.” <https://dl.acm.org/doi/10.1145/3183713.3196926>.
 </div>
+<br>
 
 <div id="ref-wang2020" class="csl-entry">
     Wang, Zhengyang, Bunyamin Sisman, Hao Wei, Xin Luna Dong, and Shuiwang Ji. 2020. “CorDEL: A Contrastive Deep Learning Approach for Entity Linkage.” <https://ieeexplore.ieee.org/document/9338287>.
 </div>
+<br>
 
 <div id="ref-yao2022" class="csl-entry">
     Yao, Dezhong, Yuhong Gu, Gao Cong, Hai Jin, and Xinqiao Lv. 2022. “Entity Resolution with Hierarchical Graph Attention Networks.” <https://dl.acm.org/doi/10.1145/3514221.3517872>.
 </div>
+<br>
 
 </div>
