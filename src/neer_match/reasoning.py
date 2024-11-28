@@ -17,8 +17,8 @@ class RefutationModel(NSMatchingModel):
 
     Inherits :class:`neer_match.matching_model.NSMatchingModel` and provides additional
     functionality for refutation logic. The built-in refutation logic allows one to
-    refute the significance of one or more conjectured associations in detecting
-    entity matches.
+    refute the significance of one or more similarities of a  conjectured association
+    in detecting entity matches.
     """
 
     def __make_claims(self, axiom_generator, refutation):
@@ -181,9 +181,9 @@ class RefutationModel(NSMatchingModel):
                 a dictionary, the keys are association names and the values are
                 similarity names. If the value is None, all similarities in the
                 association are used.
-            satisfiability_threshold: The satisfiability threshold.
-            axioms_non_sat_scale: The non-satisfiability scale.
-            axioms_sat_scale: The satisfiability scale.
+            penalty_threshold: The penalty threshold.
+            penalty_scale: The non-satisfiability scale.
+            penalty_decay: The non-satisfiability decay.
             satisfiability_weight: The satisfiability weight.
             verbose: The verbosity level.
             log_mod_n: The logging frequency.

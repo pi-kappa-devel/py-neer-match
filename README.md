@@ -42,8 +42,8 @@ the package’s functionality (without neural-symbolic components) are
 given by (Karapanagiotis and Liebald 2023).
 
 The training loops for both deep and symbolic learning models are
-implemented in [tensorflow](https://www.tensorflow.org) (Martín Abadi et
-al. 2015). The pure deep learning model inherits from the
+implemented in [tensorflow](https://www.tensorflow.org) (Abadi et al.
+2015). The pure deep learning model inherits from the
 [keras](https://keras.io) model class (Chollet et al. 2015). The
 neural-symbolic model is implemented using the logic tensor network
 ([LTN](https://pypi.org/project/ltn/)) framework (Badreddine et al.
@@ -257,6 +257,15 @@ The package is distributed under the [MIT license](LICENSE.txt).
 <div id="refs" class="references csl-bib-body hanging-indent"
 entry-spacing="0">
 
+<div id="ref-tensorflow2015" class="csl-entry">
+
+Abadi, Martín, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
+Craig Citro, Greg S. Corrado, et al. 2015. “TensorFlow:
+<span class="nocase">Large-scale</span> Machine Learning on
+Heterogeneous Systems.” <https://www.tensorflow.org/>.
+
+</div>
+
 <div id="ref-badreddine2022" class="csl-entry">
 
 Badreddine, Samy, Artur d’Avila Garcez, Luciano Serafini, and Michael
@@ -267,7 +276,7 @@ Spranger. 2022. “Logic Tensor Networks.” *Artificial Intelligence* 303:
 
 <div id="ref-keras2015" class="csl-entry">
 
-Chollet, François et al. 2015. “Keras.”
+Chollet, François et al. 2015. “Keras.” <https://keras.io>.
 
 </div>
 
@@ -302,7 +311,7 @@ Adaptation.” In *Proceedings of the VLDB Endowment*, 15:465–77.
 
 Karapanagiotis, Pantelis, and Marius Liebald. 2023. “Entity Matching
 with Similarity Encoding: A Supervised Learning Recommendation Framework
-for Linking (Big) Data.”
+for Linking (Big) Data.” <http://dx.doi.org/10.2139/ssrn.4541376>.
 
 </div>
 
@@ -321,15 +330,6 @@ Low, Jwen Fai, Benjamin C. M. Fung, and Pulei Xiong. 2024. “Better
 Entity Matching with Transformers Through Ensembles.” *Knowledge-Based
 Systems* 293 (June): 111678.
 <https://doi.org/10.1016/j.knosys.2024.111678>.
-
-</div>
-
-<div id="ref-tensorflow2015" class="csl-entry">
-
-Martín Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
-Craig Citro, Greg S. Corrado, et al. 2015. “TensorFlow:
-<span class="nocase">Large-scale</span> Machine Learning on
-Heterogeneous Systems.”
 
 </div>
 
