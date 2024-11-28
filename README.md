@@ -167,7 +167,23 @@ was generated with the R package
 
 # Alternative Software
 
-TODO
+Several state-of-the-art Entity Matching (EM) systems have been developed in recent years, each utilizing different methodologies to address the challenges of EM tasks. Below, we highlight some of the most recent and best-performing EM systems:
+
+- [**HierGAT**](https://github.com/CGCL-codes/HierGAT) ([Yao et al., 2022](https://dl.acm.org/doi/pdf/10.1145/3514221.3517872)): Hierarchical Graph Attention Network (HierGAT) leverages graph neural networks to capture both attribute-level and tuple-level interactions between entities. It has shown strong performance, especially on datasets like Abt-Buy and Amazon-GoogleProducts.
+
+- **Ditto** ([Li et al., 2020](https://github.com/megagonlabs/ditto)): Ditto is a data augmentation and transformer-based EM framework that enhances entity representations through domain-specific pre-training and data augmentation techniques. It achieved high F-scores on datasets such as DBLP-ACM and Amazon-GoogleProducts.
+
+- **CorDEL** ([Wang et al., 2020](https://doi.org/10.1145/3442381.3449928)): CorDEL introduces a correspondence reasoning model using deep learning to capture relationships between entity attributes. It demonstrated strong performance on multiple datasets, including DBLP-ACM and Amazon-GoogleProducts.
+
+- **DAEM** ([Huang et al., 2023](https://doi.org/10.1109/TKDE.2021.3136095)): Deep Attentive Entity Matching (DAEM) utilizes attention mechanisms to focus on important attribute interactions, achieving competitive results on datasets like DBLP-ACM and Amazon-GoogleProducts.
+
+- **AdaMEL** ([Jin et al., 2021](https://doi.org/10.1145/3459637.3482485)): Adaptive Metric Learning for Entity Matching (AdaMEL) dynamically adjusts distance metrics based on the data, showing high performance on the DBLP-ACM dataset.
+
+- **DeepMatcher** ([Mudgal et al., 2018](https://github.com/anhaidgroup/deepmatcher)): DeepMatcher is a deep learning-based EM system that combines attribute and attention-based models to capture entity similarities. It performed well across several benchmark datasets.
+
+- **DeepER** ([Ebraheem et al., 2018](https://github.com/anhaidgroup/deeper)): DeepER integrates deep learning techniques with traditional EM approaches to improve matching accuracy, achieving high F-scores on datasets like DBLP-ACM and Amazon-GoogleProducts.
+
+These systems represent significant advancements in the EM field, offering various approaches such as graph neural networks, attention mechanisms, transformers, and data augmentation. Depending on your project's requirements and data characteristics, they can serve as effective alternative solutions.
 
 # Contributors
 
