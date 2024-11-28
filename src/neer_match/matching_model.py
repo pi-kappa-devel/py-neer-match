@@ -432,21 +432,9 @@ class NSMatchingModel:
         return "| " + " | ".join([f"{x:<10}" for x in headers]) + " |"
 
     def _training_loop_log_row(self, epoch: int, logs: dict) -> str:
-        if logs["TP"] + logs["FN"] != 0:
-            recall = logs["TP"] / (logs["TP"] + logs["FN"])
-        else:
-            recall = 0  # Define recall as 0 when the denominator is 0
-            
-        if (logs["TP"] + logs["FP"]) != 0:
-            precision = logs["TP"] / (logs["TP"] + logs["FP"])
-        else:
-            precision = 0
-
-        if (precision + recall) != 0:
-            f1 = 2.0 * precision * recall / (precision + recall)
-        else:
-            f1 = 0 
-
+        recall = logs["TP"] / (logs["TP"] + logs["FN"])
+        precision = logs["TP"] / (logs["TP"] + logs["FP"])
+        f1 = 2.0 * precision * recall / (precision + recall)
         values = [logs["BCE"].numpy(), recall, precision, f1, logs["Sat"].numpy()]
         row = f"| {epoch:<10} | " + " | ".join([f"{x:<10.4f}" for x in values]) + " |"
         return row
