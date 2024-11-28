@@ -42,8 +42,8 @@ the package’s functionality (without neural-symbolic components) are
 given by (Karapanagiotis and Liebald 2023).
 
 The training loops for both deep and symbolic learning models are
-implemented in [tensorflow](https://www.tensorflow.org) (Abadi et al.
-2015). The pure deep learning model inherits from the
+implemented in [tensorflow](https://www.tensorflow.org) (Martín Abadi et
+al. 2015). The pure deep learning model inherits from the
 [keras](https://keras.io) model class (Chollet et al. 2015). The
 neural-symbolic model is implemented using the logic tensor network
 ([LTN](https://pypi.org/project/ltn/)) framework (Badreddine et al.
@@ -163,7 +163,80 @@ was generated with the R package
 
 # Alternative Software
 
-TODO
+Several state-of-the-art entity matching (EM) systems have been
+developed in recent years, utilizing different methodologies to address
+the challenges of EM tasks. Below, we highlight some of the most recent,
+best-performing and/or most recognized EM systems:
+
+- [**HierGAT**](https://github.com/CGCL-codes/HierGAT): HierGAT
+  introduces a Hierarchical Graph Attention Transformer Network to model
+  and leverage interdependence between EM decisions and attributes. It
+  uses a graph attention mechanism to identify discriminative words and
+  attributes, combined with contextual embeddings to enrich word
+  representations, enabling a more nuanced and interconnected approach
+  to EM (Yao et al. 2022).
+
+- [**Ditto**](https://github.com/megagonlabs/ditto): Ditto leverages
+  pre-trained Transformer-based language models to cast EM as a
+  sequence-pair classification task, enhancing matching quality through
+  fine-tuning. It incorporates optimizations such as domain-specific
+  highlighting, string summarization to retain essential information,
+  and advanced data augmentation to improve training, making it both
+  efficient and effective for large-scale EM tasks (Li et al. 2020).
+
+- **CorDEL**: CorDEL employs a contrastive deep learning framework that
+  moves beyond twin-network architectures by focusing on both syntactic
+  and semantic matching signals while emphasizing critical subtle
+  differences. The approach includes a simple yet effective variant,
+  CorDEL-Sum, to enhance the model’s ability to discern nuanced
+  relationships in data (Wang et al. 2020).
+
+- [**DAEM**](https://github.com/nju-websoft/DAEM): This approach
+  combines a deep neural network for EM with adversarial active
+  learning, enabling the automatic completion of missing textual values
+  and the modeling of both similarities and differences between records.
+  It integrates active learning to curate high-quality labeled examples,
+  adversarial learning for augmented stability, and a dynamic blocking
+  method for scalable database handling, ensuring efficient and robust
+  EM performance (Huang et al. 2023).
+
+- [**AdaMEL**](https://github.com/DerekDiJin/AdaMEL-supplementary):
+  AdaMEL introduces a deep transfer learning framework for multi-source
+  entity linkage, addressing challenges of incremental data and source
+  variability by learning high-level generic knowledge. It employs an
+  attribute-level self-attention mechanism to model attribute importance
+  and leverages domain adaptation to utilize unlabeled data from new
+  sources, enabling source-agnostic EM while accommodating additional
+  labeled data for enhanced accuracy (Jin et al. 2021).
+
+- [**DeepMatcher**](https://github.com/anhaidgroup/deepmatcher): This
+  framework is one of the first to introduce deep learning (DL) to
+  entity matching, categorizing learning approaches into SIF, RNN,
+  Attention, and Hybrid models based on their representational power. It
+  highlights DL’s strengths in handling textual and dirty EM tasks while
+  identifying its limitations in structured EM, offering valuable
+  insights for both researchers and practitioners (Mudgal et al. 2018).
+
+- **SETEM**: SETEM introduces a self-ensemble training method for EM to
+  overcome challenges in real-world scenarios, such as small datasets,
+  hard negatives, and unseen entities, where traditional Pre-trained
+  Language Model (PLM)-based methods often struggle due to their
+  reliance on large labeled datasets and overlapping benchmarks. By
+  leveraging the stability and generalization of ensemble models, SETEM
+  effectively addresses these limitations while maintaining low memory
+  consumption and high label efficiency. Additionally, it incorporates a
+  faster training method designed for low-resource applications,
+  ensuring adaptability and scalability for practical EM tasks (Ding et
+  al. 2024).
+
+- **AttendEM**: AttendEM introduces a novel framework for entity
+  matching (EM) that enhances transformer architectures through
+  intra-transformer ensembling, distinct text rearrangements, additional
+  aggregator tokens, and extra self-attention layers. Departing from the
+  focus on text cleaning and data augmentation in existing solutions,
+  AttendEM innovates within the base model design, offering a distinct
+  approach to pairwise duplicate identification across databases (Low,
+  Fung, and Xiong 2024).
 
 # Contributors
 
@@ -184,15 +257,6 @@ The package is distributed under the [MIT license](LICENSE.txt).
 <div id="refs" class="references csl-bib-body hanging-indent"
 entry-spacing="0">
 
-<div id="ref-tensorflow2015" class="csl-entry">
-
-Abadi, Martín, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
-Craig Citro, Greg S. Corrado, et al. 2015. “TensorFlow: Large-Scale
-Machine Learning on Heterogeneous Systems.”
-<https://www.tensorflow.org/>.
-
-</div>
-
 <div id="ref-badreddine2022" class="csl-entry">
 
 Badreddine, Samy, Artur d’Avila Garcez, Luciano Serafini, and Michael
@@ -203,7 +267,34 @@ Spranger. 2022. “Logic Tensor Networks.” *Artificial Intelligence* 303:
 
 <div id="ref-keras2015" class="csl-entry">
 
-Chollet, François et al. 2015. “Keras.” <https://keras.io>.
+Chollet, François et al. 2015. “Keras.”
+
+</div>
+
+<div id="ref-ding2024" class="csl-entry">
+
+Ding, Huahua, Chaofan Dai, Yahui Wu, Wubin Ma, and Haohao Zhou. 2024.
+“SETEM: <span class="nocase">Self-ensemble</span> Training with
+<span class="nocase">Pre-trained Language Models</span> for Entity
+Matching.” *Knowledge-Based Systems* 293 (June): 111708.
+<https://doi.org/10.1016/j.knosys.2024.111708>.
+
+</div>
+
+<div id="ref-huang2023" class="csl-entry">
+
+Huang, Jiacheng, Wei Hu, Zhifeng Bao, Qijin Chen, and Yuzhong Qu. 2023.
+“Deep Entity Matching with Adversarial Active Learning.” *The VLDB
+Journal* 32 (1): 229–55. <https://doi.org/10.1007/s00778-022-00745-1>.
+
+</div>
+
+<div id="ref-jin2021" class="csl-entry">
+
+Jin, Di, Bunyamin Sisman, Hao Wei, Xin Luna Dong, and Danai Koutra.
+2021. “Deep Transfer Learning for Multi-Source Entity Linkage via Domain
+Adaptation.” In *Proceedings of the VLDB Endowment*, 15:465–77.
+<https://doi.org/10.14778/3494124.3494131>.
 
 </div>
 
@@ -211,7 +302,63 @@ Chollet, François et al. 2015. “Keras.” <https://keras.io>.
 
 Karapanagiotis, Pantelis, and Marius Liebald. 2023. “Entity Matching
 with Similarity Encoding: A Supervised Learning Recommendation Framework
-for Linking (Big) Data.” <http://dx.doi.org/10.2139/ssrn.4541376>.
+for Linking (Big) Data.”
+
+</div>
+
+<div id="ref-li2020" class="csl-entry">
+
+Li, Yuliang, Jinfeng Li, Yoshihiko Suhara, AnHai Doan, and Wang-Chiew
+Tan. 2020. “Deep Entity Matching with Pre-Trained Language Models.”
+*Proceedings of the VLDB Endowment* 14 (1): 50–60.
+<https://doi.org/10.14778/3421424.3421431>.
+
+</div>
+
+<div id="ref-low2024" class="csl-entry">
+
+Low, Jwen Fai, Benjamin C. M. Fung, and Pulei Xiong. 2024. “Better
+Entity Matching with Transformers Through Ensembles.” *Knowledge-Based
+Systems* 293 (June): 111678.
+<https://doi.org/10.1016/j.knosys.2024.111678>.
+
+</div>
+
+<div id="ref-tensorflow2015" class="csl-entry">
+
+Martín Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
+Craig Citro, Greg S. Corrado, et al. 2015. “TensorFlow:
+<span class="nocase">Large-scale</span> Machine Learning on
+Heterogeneous Systems.”
+
+</div>
+
+<div id="ref-mudgal2018" class="csl-entry">
+
+Mudgal, Sidharth, Han Li, Theodoros Rekatsinas, AnHai Doan, Youngchoon
+Park, Ganesh Krishnan, Rohit Deep, Esteban Arcaute, and Vijay
+Raghavendra. 2018. “Deep Learning for Entity Matching: A Design Space
+Exploration.” In *Proceedings of the 2018 International Conference on
+Management of Data*, 19–34. <https://doi.org/10.1145/3183713.3196926>.
+
+</div>
+
+<div id="ref-wang2020" class="csl-entry">
+
+Wang, Zhengyang, Bunyamin Sisman, Hao Wei, Xin Luna Dong, and Shuiwang
+Ji. 2020. “CorDEL: A Contrastive Deep Learning Approach for Entity
+Linkage.” In *2020 IEEE International Conference on Data Mining (ICDM)*,
+1322–27. IEEE. <https://doi.org/10.1109/ICDM50108.2020.00171>.
+
+</div>
+
+<div id="ref-yao2022" class="csl-entry">
+
+Yao, Dezhong, Yuhong Gu, Gao Cong, Hai Jin, and Xinqiao Lv. 2022.
+“Entity Resolution with Hierarchical Graph Attention Networks.” In
+*Proceedings of the 2022 International Conference on Management of
+Data*, 429–42. Philadelphia PA USA: ACM.
+<https://doi.org/10.1145/3514221.3517872>.
 
 </div>
 

@@ -123,7 +123,23 @@ The logo was designed using [Microsoft Designer](https://designer.microsoft.com/
 
 # Alternative Software
 
-TODO
+Several state-of-the-art entity matching (EM) systems have been developed in recent years, utilizing different methodologies to address the challenges of EM tasks. Below, we highlight some of the most recent, best-performing and/or most recognized EM systems:
+
+- [**HierGAT**](https://github.com/CGCL-codes/HierGAT): HierGAT introduces a Hierarchical Graph Attention Transformer Network to model and leverage interdependence between EM decisions and attributes. It uses a graph attention mechanism to identify discriminative words and attributes, combined with contextual embeddings to enrich word representations, enabling a more nuanced and interconnected approach to EM [@yao2022].
+
+- [**Ditto**](https://github.com/megagonlabs/ditto): Ditto leverages pre-trained Transformer-based language models to cast EM as a sequence-pair classification task, enhancing matching quality through fine-tuning. It incorporates optimizations such as domain-specific highlighting, string summarization to retain essential information, and advanced data augmentation to improve training, making it both efficient and effective for large-scale EM tasks [@li2020].
+
+- **CorDEL**: CorDEL employs a contrastive deep learning framework that moves beyond twin-network architectures by focusing on both syntactic and semantic matching signals while emphasizing critical subtle differences. The approach includes a simple yet effective variant, CorDEL-Sum, to enhance the model's ability to discern nuanced relationships in data [@wang2020].
+
+- [**DAEM**](https://github.com/nju-websoft/DAEM): This approach combines a deep neural network for EM with adversarial active learning, enabling the automatic completion of missing textual values and the modeling of both similarities and differences between records. It integrates active learning to curate high-quality labeled examples, adversarial learning for augmented stability, and a dynamic blocking method for scalable database handling, ensuring efficient and robust EM performance [@huang2023].
+
+- [**AdaMEL**](https://github.com/DerekDiJin/AdaMEL-supplementary): AdaMEL introduces a deep transfer learning framework for multi-source entity linkage, addressing challenges of incremental data and source variability by learning high-level generic knowledge. It employs an attribute-level self-attention mechanism to model attribute importance and leverages domain adaptation to utilize unlabeled data from new sources, enabling source-agnostic EM while accommodating additional labeled data for enhanced accuracy [@jin2021].
+
+- [**DeepMatcher**](https://github.com/anhaidgroup/deepmatcher): This framework is one of the first to introduce deep learning (DL) to entity matching, categorizing learning approaches into SIF, RNN, Attention, and Hybrid models based on their representational power. It highlights DL's strengths in handling textual and dirty EM tasks while identifying its limitations in structured EM, offering valuable insights for both researchers and practitioners [@mudgal2018].
+
+- **SETEM**: SETEM introduces a self-ensemble training method for EM to overcome challenges in real-world scenarios, such as small datasets, hard negatives, and unseen entities, where traditional Pre-trained Language Model (PLM)-based methods often struggle due to their reliance on large labeled datasets and overlapping benchmarks. By leveraging the stability and generalization of ensemble models, SETEM effectively addresses these limitations while maintaining low memory consumption and high label efficiency. Additionally, it incorporates a faster training method designed for low-resource applications, ensuring adaptability and scalability for practical EM tasks [@ding2024].
+
+- **AttendEM**: AttendEM introduces a novel framework for entity matching (EM) that enhances transformer architectures through intra-transformer ensembling, distinct text rearrangements, additional aggregator tokens, and extra self-attention layers. Departing from the focus on text cleaning and data augmentation in existing solutions, AttendEM innovates within the base model design, offering a distinct approach to pairwise duplicate identification across databases [@low2024].
 
 # Contributors
 
