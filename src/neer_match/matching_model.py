@@ -476,6 +476,7 @@ class NSMatchingModel:
         right: pd.DataFrame,
         matches: pd.DataFrame,
         epochs: int,
+        mismatch_share: float = 0.1,
         satisfiability_weight: float = 1.0,
         verbose: int = 1,
         log_mod_n: int = 1,
@@ -496,6 +497,7 @@ class NSMatchingModel:
             right: The right data frame.
             matches: The matches data frame.
             epochs: The number of epochs to train.
+            mismatch_share: The mismatch share.
             satisfiability_weight: The weight of the satisfiability loss.
             verbose: The verbosity level.
             log_mod_n: The log modulo.
@@ -512,7 +514,12 @@ class NSMatchingModel:
         # The remaining arguments are validated in the DataGenerator
 
         data_generator = DataGenerator(
-            self.record_pair_network.similarity_map, left, right, matches, **kwargs
+            self.record_pair_network.similarity_map, 
+            left, 
+            right, 
+            matches, 
+            mismatch_share=mismatch_share,
+            **kwargs
         )
 
         axioms = self._make_axioms(data_generator)
