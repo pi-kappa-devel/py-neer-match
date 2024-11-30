@@ -536,6 +536,7 @@ class NSMatchingModel:
         right: pd.DataFrame,
         matches: pd.DataFrame,
         batch_size: int = 16,
+        mismatch_share: float = 1.0,
         satisfiability_weight: float = 1.0,
     ) -> dict:
         """Evaluate the model.
@@ -549,6 +550,7 @@ class NSMatchingModel:
             right: The right data frame.
             matches: The matches data frame.
             batch_size: Batch size.
+            mismatch_share: The mismatch share.
             satisfiability_weight: The weight of the satisfiability loss.
         """
         data_generator = DataGenerator(
@@ -556,7 +558,7 @@ class NSMatchingModel:
             left,
             right,
             matches,
-            mismatch_share=1.0,
+            mismatch_share=mismatch_share,
             batch_size=batch_size,
             shuffle=False,
         )
