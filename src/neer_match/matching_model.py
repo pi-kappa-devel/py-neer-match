@@ -13,6 +13,8 @@ import ltn
 import pandas as pd
 import tensorflow as tf
 import typing
+import pickle
+from pathlib import Path
 
 
 def _suggest(
@@ -221,6 +223,32 @@ class DLMatchingModel(tf.keras.Model):
             **kwargs: Additional keyword arguments passed to the suggest function.
         """
         return _suggest(self, left, right, count, batch_size=batch_size, **kwargs)
+
+    def save(self, target_directory: Path, name: str, include_optimizer: bool = True) -> None:
+        """Save the deep learning model to disk.
+
+        Saves the model architecture, weights, and optimizer state (optional),
+        along with the similarity map.
+
+        Args:
+            target_directory: The directory where the model will be saved.
+            name: The name of the model (used as a subdirectory).
+            include_optimizer: Whether to save the optimizer state.
+        """
+        # Ensure target_directory is a Path object
+        target_directory = Path(target_directory) / name / 'model'
+
+        # Ensure the directory exists
+        target_directory.mkdir(parents=True, exist_ok=True)
+        
+        # Save the model architecture and weights
+        super().save(target_directory / "model.h5", include_optimizer=include_optimizer)
+        
+        # Save the similarity map
+        with open(target_directory / "similarity_map.pkl", "wb") as f:
+            pickle.dump(self.similarity_map, f)
+
+        print(f"Model successfully saved to {target_directory}")
 
     @property
     def similarity_map(self) -> SimilarityMap:
@@ -476,6 +504,7 @@ class NSMatchingModel:
         right: pd.DataFrame,
         matches: pd.DataFrame,
         epochs: int,
+        mismatch_share: float = 0.1,
         satisfiability_weight: float = 1.0,
         verbose: int = 1,
         log_mod_n: int = 1,
@@ -496,6 +525,7 @@ class NSMatchingModel:
             right: The right data frame.
             matches: The matches data frame.
             epochs: The number of epochs to train.
+            mismatch_share: The mismatch share.
             satisfiability_weight: The weight of the satisfiability loss.
             verbose: The verbosity level.
             log_mod_n: The log modulo.
@@ -512,7 +542,12 @@ class NSMatchingModel:
         # The remaining arguments are validated in the DataGenerator
 
         data_generator = DataGenerator(
-            self.record_pair_network.similarity_map, left, right, matches, **kwargs
+            self.record_pair_network.similarity_map, 
+            left, 
+            right, 
+            matches, 
+            mismatch_share=mismatch_share,
+            **kwargs
         )
 
         axioms = self._make_axioms(data_generator)
@@ -529,6 +564,7 @@ class NSMatchingModel:
         right: pd.DataFrame,
         matches: pd.DataFrame,
         batch_size: int = 16,
+        mismatch_share: float = 1.0,
         satisfiability_weight: float = 1.0,
     ) -> dict:
         """Evaluate the model.
@@ -542,6 +578,7 @@ class NSMatchingModel:
             right: The right data frame.
             matches: The matches data frame.
             batch_size: Batch size.
+            mismatch_share: The mismatch share.
             satisfiability_weight: The weight of the satisfiability loss.
         """
         data_generator = DataGenerator(
@@ -549,7 +586,7 @@ class NSMatchingModel:
             left,
             right,
             matches,
-            mismatch_share=1.0,
+            mismatch_share=mismatch_share,
             batch_size=batch_size,
             shuffle=False,
         )
@@ -633,6 +670,34 @@ class NSMatchingModel:
             batch_size: Batch size.
         """
         return _suggest(self, left, right, count, batch_size=batch_size)
+
+    def save(self, target_directory: Path, name: str) -> None:
+        """Save the neural-symbolic model to disk.
+
+        Saves the record pair network, similarity map, and optimizer.
+
+        Args:
+            target_directory: The directory where the model will be saved.
+            name: The name of the model (used as a subdirectory).
+        """
+        # Ensure target_directory is a Path object
+        target_directory = Path(target_directory) / name / 'model'
+
+        # Ensure the directory exists
+        target_directory.mkdir(parents=True, exist_ok=True)
+        
+        # Save the record pair network weights
+        self.record_pair_network.save_weights(target_directory / "record_pair_network.weights.h5")
+        
+        # Save the similarity map
+        with open(target_directory / "similarity_map.pkl", "wb") as f:
+            pickle.dump(self.record_pair_network.similarity_map, f)
+        
+        # Save the optimizer state
+        with open(target_directory / "optimizer.pkl", "wb") as f:
+            pickle.dump(self.optimizer.get_config(), f)
+        
+        print(f"Model successfully saved to {target_directory}")
 
     @property
     def similarity_map(self) -> SimilarityMap:
