@@ -224,32 +224,6 @@ class DLMatchingModel(tf.keras.Model):
         """
         return _suggest(self, left, right, count, batch_size=batch_size, **kwargs)
 
-    def save(self, target_directory: Path, name: str, include_optimizer: bool = True) -> None:
-        """Save the deep learning model to disk.
-
-        Saves the model architecture, weights, and optimizer state (optional),
-        along with the similarity map.
-
-        Args:
-            target_directory: The directory where the model will be saved.
-            name: The name of the model (used as a subdirectory).
-            include_optimizer: Whether to save the optimizer state.
-        """
-        # Ensure target_directory is a Path object
-        target_directory = Path(target_directory) / name / 'model'
-
-        # Ensure the directory exists
-        target_directory.mkdir(parents=True, exist_ok=True)
-        
-        # Save the model architecture and weights
-        super().save(target_directory / "model.h5", include_optimizer=include_optimizer)
-        
-        # Save the similarity map
-        with open(target_directory / "similarity_map.pkl", "wb") as f:
-            pickle.dump(self.similarity_map, f)
-
-        print(f"Model successfully saved to {target_directory}")
-
     @property
     def similarity_map(self) -> SimilarityMap:
         """Similarity Map of the Model."""
@@ -670,34 +644,6 @@ class NSMatchingModel:
             batch_size: Batch size.
         """
         return _suggest(self, left, right, count, batch_size=batch_size)
-
-    def save(self, target_directory: Path, name: str) -> None:
-        """Save the neural-symbolic model to disk.
-
-        Saves the record pair network, similarity map, and optimizer.
-
-        Args:
-            target_directory: The directory where the model will be saved.
-            name: The name of the model (used as a subdirectory).
-        """
-        # Ensure target_directory is a Path object
-        target_directory = Path(target_directory) / name / 'model'
-
-        # Ensure the directory exists
-        target_directory.mkdir(parents=True, exist_ok=True)
-        
-        # Save the record pair network weights
-        self.record_pair_network.save_weights(target_directory / "record_pair_network.weights.h5")
-        
-        # Save the similarity map
-        with open(target_directory / "similarity_map.pkl", "wb") as f:
-            pickle.dump(self.record_pair_network.similarity_map, f)
-        
-        # Save the optimizer state
-        with open(target_directory / "optimizer.pkl", "wb") as f:
-            pickle.dump(self.optimizer.get_config(), f)
-        
-        print(f"Model successfully saved to {target_directory}")
 
     @property
     def similarity_map(self) -> SimilarityMap:
