@@ -5,7 +5,7 @@ The module provides functionality to store and manage a similarity mappings betw
 records of two datasets.
 """
 
-from rapidfuzz import distance
+from rapidfuzz import distance, fuzz
 import numpy
 import typing
 
@@ -30,6 +30,7 @@ def gaussian(x: typing.Union[float, int], y: typing.Union[float, int]) -> float:
 def available_similarities() -> typing.Dict[str, typing.Callable]:
     """Return the list of available similarities."""
     return {
+        "basic_ratio": fuzz.ratio,
         "damerau_levenshtein": distance.DamerauLevenshtein.normalized_similarity,
         "discrete": discrete,
         "euclidean": euclidean,
@@ -41,8 +42,16 @@ def available_similarities() -> typing.Dict[str, typing.Callable]:
         "lcsseq": distance.LCSseq.normalized_similarity,
         "levenshtein": distance.Levenshtein.normalized_similarity,
         "osa": distance.OSA.normalized_similarity,
+        "partial_ratio": fuzz.partial_ratio,
+        "partial_ratio_alignment": fuzz.partial_ratio_alignment,
+        "partial_token_ratio": fuzz.partial_token_ratio,
+        "partial_token_set_ratio": fuzz.partial_token_set_ratio,
+        "partial_token_sort_ratio": fuzz.partial_token_sort_ratio,
         "postfix": distance.Postfix.normalized_similarity,
         "prefix": distance.Prefix.normalized_similarity,
+        "token_ratio": fuzz.token_ratio,
+        "token_set_ratio": fuzz.token_set_ratio,
+        "token_sort_ratio": fuzz.token_sort_ratio,
     }
 
 

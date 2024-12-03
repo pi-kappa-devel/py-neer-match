@@ -10,7 +10,7 @@ instructions = {
     "title": ["jaro_winkler"],
     "platform": ["levenshtein", "jaro"],
     "year": ["euclidean", "discrete"],
-    "developer~dev": ["jaro"],
+    "developer~dev": ["jaro", "token_sort_ratio"],
 }
 
 items = [
