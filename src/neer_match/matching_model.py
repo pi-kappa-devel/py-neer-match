@@ -98,6 +98,29 @@ class DLMatchingModel(tf.keras.Model):
         """Call the model on inputs."""
         return self.record_pair_network(inputs)
 
+    def compile(self, optimizer=None, loss=None, metrics=None, **kwargs):
+        """
+        Compile the model with the desired loss, optimizer, and metrics.
+
+        Args:
+            optimizer: The optimizer to use.
+            loss: The loss function to use.
+            metrics: A list of metrics to compute during evaluation.
+            **kwargs: Additional arguments for tf.keras.Model.compile.
+        """
+        if optimizer is None:
+            optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+        if loss is None:
+            loss = tf.keras.losses.BinaryCrossentropy()
+        if metrics is None:
+            metrics = [
+                tf.keras.metrics.BinaryAccuracy(name="accuracy"),
+                tf.keras.metrics.Precision(name="precision"),
+                tf.keras.metrics.Recall(name="recall"),
+            ]
+        
+        super().compile(optimizer=optimizer, loss=loss, metrics=metrics, **kwargs)
+
     def fit(
         self,
         left: pd.DataFrame,
@@ -141,30 +164,25 @@ class DLMatchingModel(tf.keras.Model):
         left: pd.DataFrame,
         right: pd.DataFrame,
         matches: pd.DataFrame,
+        batch_size: int = 16,
+        mismatch_share: float = 1.0,
         **kwargs,
     ) -> dict:
-        """Evaluate the model.
-
-        Construct a data generator from the input data frames using the
-        similarity map with which the model was initialized and evaluate the model.
-        The model is evaluated by calling the :func:`tensorflow.keras.Model.evaluate`
-
-        Args:
-            left: The left data frame.
-            right: The right data frame.
-            matches: The matches data frame.
-            **kwargs: Additional keyword arguments passed to parent class
-                      (:func:`tensorflow.keras.Model.evaluate`).
-        """
+        """Evaluate the model using predefined metrics."""
+        # Create the data generator
         generator = DataGenerator(
             self.record_pair_network.similarity_map,
             left,
             right,
             matches,
-            mismatch_share=1.0,
+            mismatch_share=mismatch_share,
+            batch_size=batch_size,
             shuffle=False,
         )
-        return super().evaluate(generator, **kwargs)
+
+        # Evaluate and return metrics directly
+        return super().evaluate(generator, return_dict=True, **kwargs)
+
 
     def predict_from_generator(self, generator: DataGenerator, **kwargs) -> tf.Tensor:
         """Generate model predictions from a generator.
