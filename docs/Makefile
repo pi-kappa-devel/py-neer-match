@@ -20,14 +20,14 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	cp "$(PACKAGEDIR)/LICENSE.txt" "$(SOURCEDIR)/LICENSE.md"
-	quarto render "$(SOURCEDIR)/_static/README.qmd" -t gfm --output-dir ../
+	QUARTO_PYTHON=python quarto render "$(SOURCEDIR)/_static/README.qmd" -t gfm --output-dir ../
 	cp "$(SOURCEDIR)/README.md" ../README.md
 	sed -i 's/\[MIT license\](LICENSE.txt)/<a href="LICENSE.html">MIT license<\/a>/g' \
 		"$(SOURCEDIR)/README.md"
 	sed -i 's/docs\/source\///g' "$(SOURCEDIR)/README.md"
 	for path in $(EXAMPLEDIR)/*.qmd; do \
 		file=$$(basename "$$path"); \
-		quarto render "$(EXAMPLEDIR)/$${file}" -t gfm; \
+		QUARTO_PYTHON=python quarto render "$(EXAMPLEDIR)/$${file}" -t gfm; \
 		mv "$(EXAMPLEDIR)/$${file%.qmd}.md" "$(SOURCEDIR)/$${file%.qmd}.md"; \
 		sed -i "s/$${file%.qmd}_files/_static\/examples\/$${file%.qmd}_files/g" \
 			"$(SOURCEDIR)/$${file%.qmd}.md"; \

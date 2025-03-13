@@ -122,6 +122,14 @@ model.fit(
 
 # Installation
 
+## From PyPi
+
+The package is available on
+[PyPi](https://pypi.org/project/neer-match/). You can install it using
+`pip`:
+
+        pip install neer-match
+
 ## From Source
 
 You can obtain the sources for the development version of `neermatch`
