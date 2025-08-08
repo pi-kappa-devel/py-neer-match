@@ -23,6 +23,12 @@ Forschungsgemeinschaft](https://www.dfg.de/de) (DFG) under Grant
 Spaces for the Social Sciences](https://www.new-data-spaces.de/en-us/)”
 (SPP 2431).
 
+Additional matching functionality for automating data preparation
+pipelines and creating common identifiers of matched entities is
+provided by the sibling
+[neer-match-utilities](https://pypi.org/project/neer-match-utilities)
+package.
+
 The package has also an `R` implementation available at
 [r-neer-match](https://github.com/pi-kappa-devel/r-neer-match).
 

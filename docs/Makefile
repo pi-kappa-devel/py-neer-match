@@ -36,3 +36,7 @@ examples: $(EXAMPLE_MD)
 
 html: $(SOURCEDIR)/LICENSE.md $(SOURCEDIR)/README.md examples
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+doc.zip: html
+	@echo "Creating zip archive of the public site..."
+	cd build/html && zip -r ../doc.zip .
