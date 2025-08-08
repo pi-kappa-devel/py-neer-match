@@ -13,12 +13,12 @@ authors = [
 description = "NEural-symbolic Entity Reasoning and Matching"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Topic :: Database",
