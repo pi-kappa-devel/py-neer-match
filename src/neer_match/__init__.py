@@ -3,5 +3,5 @@
 Neural-symbolic Entity Reasoning and Matching.
 """
 
-__version__ = '0.7.41'
+__version__ = '0.7.42'
 
