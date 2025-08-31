@@ -9,6 +9,9 @@ from neer_match.axiom_generator import AxiomGenerator
 from neer_match.data_generator import DataGenerator
 from neer_match.record_pair_network import RecordPairNetwork
 from neer_match.similarity_map import SimilarityMap
+from neer_match.metrics import (PrecisionMetric, RecallMetric, AccuracyMetric,
+    F1Metric, MCCMetric,
+)
 import ltn
 import pandas as pd
 import tensorflow as tf
@@ -44,6 +47,109 @@ def _suggest(
     )
     return suggestions.iloc[where]
 
+
+def _evaluate_loop(
+    forward_fn: typing.Callable[[dict], tf.Tensor],
+    generator: DataGenerator,
+    base_loss_fn: tf.keras.losses.Loss,
+    threshold: float,
+    axioms: typing.Optional[typing.Callable[[dict, tf.Tensor], tf.Tensor]] = None,
+    satisfiability_weight: float = 1.0,
+    verbose: int = 1,
+) -> dict:
+    """
+    Shared evaluation loop (no gradient updates).
+    Returns TP, FP, TN, FN (integers), total Loss, and rate metrics.
+    """
+
+    # rate metrics (accumulate totals internally — not printed during training)
+    precision_m = PrecisionMetric(threshold=threshold)
+    recall_m = RecallMetric(threshold=threshold)
+    accuracy_m = AccuracyMetric(threshold=threshold)
+    f1_m = F1Metric(threshold=threshold)
+    mcc_m = MCCMetric(threshold=threshold)
+
+    # integer confusion counts (only for evaluation)
+    tp_total = tf.constant(0, dtype=tf.int64)
+    fp_total = tf.constant(0, dtype=tf.int64)
+    tn_total = tf.constant(0, dtype=tf.int64)
+    fn_total = tf.constant(0, dtype=tf.int64)
+
+    total_loss = tf.constant(0.0, dtype=tf.float32)
+    sat_sum = tf.constant(0.0, dtype=tf.float32)
+    sat_batches = tf.constant(0.0, dtype=tf.float32)
+
+    no_batches = len(generator)
+    pb_size = 60
+
+    for i, (features, labels) in enumerate(generator):
+        if verbose > 0:
+            pb_step = int((i + 1) / no_batches * pb_size)
+            pb = "=" * pb_step + "." * (pb_size - pb_step)
+            print(f"\r[{pb}] {i + 1}/{no_batches}", end="", flush=True)
+
+        preds = forward_fn(features)
+        base_loss = base_loss_fn(labels, preds)
+
+        if axioms is not None:
+            sat = axioms(features, labels)  # scalar in [0,1]
+            loss = (1.0 - satisfiability_weight) * base_loss + satisfiability_weight * (1.0 - sat)
+            sat_sum += tf.cast(sat, tf.float32)
+            sat_batches += 1.0
+        else:
+            loss = base_loss
+
+        # accumulate TOTAL loss consistent with reduction
+        reduction = getattr(base_loss_fn, "reduction", tf.keras.losses.Reduction.AUTO)
+        batch_n = tf.cast(tf.size(tf.reshape(labels, (-1,))), tf.float32)
+        if reduction in (tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+                         tf.keras.losses.Reduction.AUTO):
+            total_loss += loss * batch_n
+        elif reduction == tf.keras.losses.Reduction.SUM:
+            total_loss += loss
+        else:
+            total_loss += tf.reduce_sum(loss)
+
+        # ---- update integer confusion counts (evaluation only) ----
+        y_true_f = tf.reshape(tf.cast(labels, tf.float32), [-1])
+        y_pred_f = tf.reshape(tf.cast(preds,  tf.float32), [-1])
+        y_hat    = tf.cast(y_pred_f >= tf.cast(threshold, tf.float32), tf.int32)
+        y_true_i = tf.cast(tf.round(y_true_f), tf.int32)
+
+        tp = tf.math.count_nonzero(tf.logical_and(y_hat == 1, y_true_i == 1), dtype=tf.int64)
+        fp = tf.math.count_nonzero(tf.logical_and(y_hat == 1, y_true_i == 0), dtype=tf.int64)
+        tn = tf.math.count_nonzero(tf.logical_and(y_hat == 0, y_true_i == 0), dtype=tf.int64)
+        fn = tf.math.count_nonzero(tf.logical_and(y_hat == 0, y_true_i == 1), dtype=tf.int64)
+
+        tp_total += tp
+        fp_total += fp
+        tn_total += tn
+        fn_total += fn
+
+        # ---- update rate metrics (computed from totals internally) ----
+        for m in (precision_m, recall_m, accuracy_m, f1_m, mcc_m):
+            m.update_state(labels, preds)
+
+    if verbose > 0:
+        print()
+
+    result = {
+        "TP": int(tp_total.numpy()),
+        "FP": int(fp_total.numpy()),
+        "TN": int(tn_total.numpy()),
+        "FN": int(fn_total.numpy()),
+        "Loss": float(total_loss.numpy()),
+        "Accuracy": float(accuracy_m.result().numpy()),
+        "Recall": float(recall_m.result().numpy()),
+        "Precision": float(precision_m.result().numpy()),
+        "F1": float(f1_m.result().numpy()),
+        "MCC": float(mcc_m.result().numpy()),
+    }
+
+    if sat_batches > 0:
+        result["Sat"] = float((sat_sum / sat_batches).numpy())
+
+    return result
 
 class DLMatchingModel(tf.keras.Model):
     """A deep learning matching model class.
@@ -98,7 +204,15 @@ class DLMatchingModel(tf.keras.Model):
         """Call the model on inputs."""
         return self.record_pair_network(inputs)
 
-    def compile(self, optimizer=None, loss=None, metrics=None, **kwargs):
+    def compile(
+        self,
+        optimizer=None,
+        loss=None,
+        metrics=None,
+        *,
+        threshold: float = 0.5,
+        **kwargs,
+    ):
         """
         Compile the model with the desired loss, optimizer, and metrics.
 
@@ -106,17 +220,21 @@ class DLMatchingModel(tf.keras.Model):
             optimizer: The optimizer to use.
             loss: The loss function to use.
             metrics: A list of metrics to compute during evaluation.
+            threshold: Threshold for binary classification metrics (default 0.5).
             **kwargs: Additional arguments for tf.keras.Model.compile.
         """
         if optimizer is None:
             optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
         if loss is None:
             loss = tf.keras.losses.BinaryCrossentropy()
+        self._threshold = float(threshold)
         if metrics is None:
             metrics = [
-                tf.keras.metrics.BinaryAccuracy(name="accuracy"),
-                tf.keras.metrics.Precision(name="precision"),
-                tf.keras.metrics.Recall(name="recall"),
+                AccuracyMetric(name="accuracy", threshold=threshold),
+                PrecisionMetric(name="precision", threshold=threshold),
+                RecallMetric(name="recall", threshold=threshold),
+                F1Metric(name="f1", threshold=threshold),
+                MCCMetric(name="mcc", threshold=threshold),
             ]
         
         super().compile(optimizer=optimizer, loss=loss, metrics=metrics, **kwargs)
@@ -168,8 +286,11 @@ class DLMatchingModel(tf.keras.Model):
         mismatch_share: float = 1.0,
         **kwargs,
     ) -> dict:
-        """Evaluate the model using predefined metrics."""
-        # Create the data generator
+        """
+        Evaluate the DL model with the same return structure as the NS model's
+        custom loop (no axioms). Returns TP, FP, TN, FN, Accuracy, Precision,
+        Recall, F1, MCC, and the training loss summed across batches.
+        """
         generator = DataGenerator(
             self.record_pair_network.similarity_map,
             left,
@@ -180,9 +301,18 @@ class DLMatchingModel(tf.keras.Model):
             shuffle=False,
         )
 
-        # Evaluate and return metrics directly
-        return super().evaluate(generator, return_dict=True, **kwargs)
+        if not hasattr(self, "loss") or self.loss is None:
+            raise ValueError(
+                "Model must be compiled with a loss function before calling evaluate."
+            )
 
+        return _evaluate_loop(
+            forward_fn=self.record_pair_network,
+            generator=generator,
+            base_loss_fn=self.loss,                     # whatever you compiled with (incl. custom)
+            threshold=getattr(self, "_threshold", 0.5),
+            axioms=None,                                # DL path → no axioms
+        )
 
     def predict_from_generator(self, generator: DataGenerator, **kwargs) -> tf.Tensor:
         """Generate model predictions from a generator.
@@ -381,6 +511,7 @@ class NSMatchingModel(tf.keras.Model):
         loss_clb: typing.Callable,
         trainable_variables: typing.List[tf.Variable],
         verbose: int = 1,
+        metrics: typing.Optional[typing.Sequence[tf.keras.metrics.Metric]] = None,
     ) -> dict:
         no_batches = len(data_generator)
         pb_size = 60
@@ -393,6 +524,11 @@ class NSMatchingModel(tf.keras.Model):
             "BCE": 0,
             "Sat": 0,
             "Loss": 0,
+            "F1": None,
+            "MCC": None,
+            "Accuracy": None,
+            "Precision": None,
+            "Recall": None,
         }
 
         for i, (features, labels) in enumerate(data_generator):
@@ -400,6 +536,7 @@ class NSMatchingModel(tf.keras.Model):
                 pb_step = int((i + 1) / no_batches * pb_size)
                 pb = "=" * pb_step + "." * (pb_size - pb_step)
                 print(f"\r[{pb}] {i + 1}/{no_batches}", end="", flush=True)
+
             with tf.GradientTape() as tape:
                 batch_loss, batch_logs = loss_clb(features, labels)
             grads = tape.gradient(batch_loss, trainable_variables)
@@ -407,6 +544,8 @@ class NSMatchingModel(tf.keras.Model):
 
             preds = batch_logs["Predicted"]
             preds = tf.reshape(preds, preds.shape[0])
+
+            # running counts
             logs["TP"] += tf.reduce_sum(tf.round(preds) * labels)
             logs["FP"] += tf.reduce_sum(tf.round(preds) * (1.0 - labels))
             logs["TN"] += tf.reduce_sum((1.0 - tf.round(preds)) * (1.0 - labels))
@@ -420,12 +559,49 @@ class NSMatchingModel(tf.keras.Model):
                     logs["ASat"] += batch_logs["ASat"]
             logs["Loss"] += batch_loss
 
+            # update optional custom metrics
+            if metrics:
+                for m in metrics:
+                    m.update_state(labels, preds)
+
         logs["Sat"] /= no_batches
         if "ASat" in logs:
             logs["ASat"] /= no_batches
 
         if verbose > 0:
             print("\r", end="", flush=True)
+
+        # Fill derived metrics at the end
+        if metrics:
+            m = {mtr.name: mtr for mtr in metrics}
+            if "accuracy" in m:
+                logs["Accuracy"] = m["accuracy"].result()
+            if "precision" in m:
+                logs["Precision"] = m["precision"].result()
+            if "recall" in m:
+                logs["Recall"] = m["recall"].result()
+            if "f1" in m:
+                logs["F1"] = m["f1"].result()
+            if "mcc" in m:
+                logs["MCC"] = m["mcc"].result()
+        else:
+            # compute from TP/FP/TN/FN (kept for completeness)
+            tp = tf.cast(logs["TP"], tf.float32)
+            fp = tf.cast(logs["FP"], tf.float32)
+            tn = tf.cast(logs["TN"], tf.float32)
+            fn = tf.cast(logs["FN"], tf.float32)
+
+            # NaN if undefined
+            precision = tp / (tp + fp)
+            recall = tp / (tp + fn)
+            logs["Precision"] = precision
+            logs["Recall"] = recall
+            logs["F1"] = (2.0 * precision * recall) / (precision + recall)
+            logs["MCC"] = (
+                (tp * tn - fp * fn)
+                / tf.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+            )
+            logs["Accuracy"] = (tp + tn) / (tp + tn + fp + fn)
 
         return logs
 
@@ -448,15 +624,44 @@ class NSMatchingModel(tf.keras.Model):
         return loss_clb
 
     def _training_loop_log_header(self) -> str:
-        headers = ["Epoch", "BCE", "Recall", "Precision", "F1", "Sat"]
+        headers = ["Epoch", "BCE", "Recall", "Precision", "F1", "Sat", "MCC"]
         return "| " + " | ".join([f"{x:<10}" for x in headers]) + " |"
 
     def _training_loop_log_row(self, epoch: int, logs: dict) -> str:
-        recall = logs["TP"] / (logs["TP"] + logs["FN"])
-        precision = logs["TP"] / (logs["TP"] + logs["FP"])
-        f1 = 2.0 * precision * recall / (precision + recall)
-        values = [logs["BCE"].numpy(), recall, precision, f1, logs["Sat"].numpy()]
-        row = f"| {epoch:<10} | " + " | ".join([f"{x:<10.4f}" for x in values]) + " |"
+        def _to_float(x):
+            # accept python floats, numpy floats, or tf.Tensors
+            if hasattr(x, "numpy"):
+                x = x.numpy()
+            return float(x)
+
+        tp = logs["TP"]; fp = logs["FP"]; tn = logs["TN"]; fn = logs["FN"]
+
+        # compute as tensors to preserve NaN when denominators are zero
+        tp = tf.cast(tp, tf.float32)
+        fp = tf.cast(fp, tf.float32)
+        tn = tf.cast(tn, tf.float32)
+        fn = tf.cast(fn, tf.float32)
+
+        recall = tp / (tp + fn)
+        precision = tp / (tp + fp)
+        f1 = (2.0 * precision * recall) / (precision + recall)
+        mcc = (
+            (tp * tn - fp * fn) /
+            tf.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        )
+
+        bce = logs["BCE"]
+        sat = logs["Sat"]
+
+        values = [
+            _to_float(bce),
+            _to_float(recall),
+            _to_float(precision),
+            _to_float(f1),
+            _to_float(mcc),
+            _to_float(sat),
+        ]
+        row = f"| {epoch:<10} | " + " | ".join(f"{v:<10.4f}" for v in values) + " |"
         return row
 
     def _training_loop_log_end(self, epoch: int, logs: dict) -> str:
@@ -552,12 +757,43 @@ class NSMatchingModel(tf.keras.Model):
 
     def compile_as_DL(
         self,
-        optimizer = None,
-        loss = tf.keras.losses.BinaryCrossentropy(),
-        metrics = ['accuracy', 'precision', 'recall'],
+        optimizer=None,
+        loss=None,
+        metrics=None,
+        *,
+        threshold: float = 0.5,
         **kwargs,
     ):
-        super().compile(optimizer=optimizer, loss=loss, metrics=metrics, **kwargs)
+        """
+        Compile the NS model in plain DL mode using the same defaults and
+        extended metrics as DLMatchingModel.compile.
+
+        Args:
+            optimizer: Optimizer to use. Defaults to Adam(1e-4).
+            loss: Loss function. Defaults to BinaryCrossentropy().
+            metrics: If None, uses extended metrics (accuracy, precision, recall,
+                     F1, MCC). If a list is provided, it is used as-is.
+            threshold: Threshold for binary metrics (default 0.5).
+            **kwargs: Passed to tf.keras.Model.compile.
+        """
+        if optimizer is None:
+            optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+        if loss is None:
+            loss = tf.keras.losses.BinaryCrossentropy()
+
+        # Save for consistency if you later need it elsewhere
+        self._threshold = float(threshold)
+
+        if metrics is None:
+            metrics = [
+                AccuracyMetric(name="accuracy", threshold=threshold),
+                PrecisionMetric(name="precision", threshold=threshold),
+                RecallMetric(name="recall", threshold=threshold),
+                F1Metric(name="f1", threshold=threshold),
+                MCCMetric(name="mcc", threshold=threshold),
+            ]
+
+        return super().compile(optimizer=optimizer, loss=loss, metrics=metrics, **kwargs)
 
     def call(self, inputs: typing.Dict[str, tf.Tensor]) -> tf.Tensor:
         """Call the model on inputs."""
@@ -601,37 +837,26 @@ class NSMatchingModel(tf.keras.Model):
         )
 
         if not use_axioms:
-            self.compile_as_DL()
-            return super().evaluate(data_generator, return_dict = True, **kwargs)
-
+            self.compile_as_DL(threshold=getattr(self, "_threshold", 0.5))
+            return _evaluate_loop(
+                forward_fn=self.record_pair_network,
+                generator=data_generator,
+                base_loss_fn=self.loss,
+                threshold=getattr(self, "_threshold", 0.5),
+                axioms=None,
+            )
         else:
             axioms = self._make_axioms(data_generator)
-            loss_clb = self.__make_loss(axioms, satisfiability_weight)
-
-            trainable_variables = self.record_pair_network.trainable_variables
-            logs = self.__for_epoch(
-                data_generator,
-                loss_clb,
-                trainable_variables,
-                verbose=1,
+            # base BCE for the hybrid component; could also be another base loss if desired
+            base_loss_fn = getattr(self, "bce", tf.keras.losses.BinaryCrossentropy())
+            return _evaluate_loop(
+                forward_fn=self.record_pair_network,
+                generator=data_generator,
+                base_loss_fn=base_loss_fn,
+                threshold=getattr(self, "_threshold", 0.5),
+                axioms=axioms,
+                satisfiability_weight=satisfiability_weight,
             )
-
-            tp = logs["TP"]
-            fp = logs["FP"]
-            tn = logs["TN"]
-            fn = logs["FN"]
-            logs["Accuracy"] = (tp + tn) / (tp + tn + fp + fn)
-            logs["Recall"] = tp / (tp + fn)
-            logs["Precision"] = tp / (tp + fp)
-            logs["F1"] = (
-                2.0
-                * logs["Precision"]
-                * logs["Recall"]
-                / (logs["Precision"] + logs["Recall"])
-            )
-            return {
-                key: value.numpy() for key, value in logs.items() if key != "no_batches"
-            }
 
     def predict_from_generator(self, generator: DataGenerator) -> tf.Tensor:
         """Generate model predictions from a generator.
