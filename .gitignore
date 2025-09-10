@@ -7,3 +7,5 @@ __pycache__
 dist/*
 docs/build
 htmlcov/*
+*sublime*
+*.DS_Store
