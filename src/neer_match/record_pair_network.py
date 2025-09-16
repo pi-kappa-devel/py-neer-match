@@ -55,8 +55,8 @@ class RecordPairNetwork(tf.keras.Model):
         Args:
             similarity_map: The similarity map.
             initial_feature_width_scales: The initial width scales of the hidden layers
-                    for each field pair network. If an integer is passed, the same scale is
-                    used for all networks.
+                    for each field pair network. If an integer is passed, the same scale
+                    is used for all networks.
             feature_depths: The depths of the networks for each field pair network. If
                     an integer is passed, the same depth is used for all networks.
             initial_record_width_scale: The initial width scale of the hidden layers for

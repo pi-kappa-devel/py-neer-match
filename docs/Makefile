@@ -12,7 +12,6 @@ EXAMPLEDIR    = $(SOURCEDIR)/_static/examples
 
 EXAMPLE_MD := $(patsubst $(EXAMPLEDIR)/%.qmd, $(SOURCEDIR)/%.md, $(wildcard $(EXAMPLEDIR)/*.qmd))
 
-# Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 

@@ -78,7 +78,7 @@ class FieldPairNetwork(tf.keras.Model):
         )
         return config
 
-    def build(self, input_shape : tf.TensorShape) -> None:
+    def build(self, input_shape: tf.TensorShape) -> None:
         """Build the network."""
         for layer in self.field_layers:
             layer.build(input_shape)
