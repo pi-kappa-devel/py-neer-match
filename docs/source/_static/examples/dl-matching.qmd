@@ -254,7 +254,13 @@ suggestions = suggestions.join(
     matches.iloc[-no_duplicates:,:].assign(duplicate=True).set_index(['left', 'right']),
     on = ["left", "right"],
     how = "left"
-).fillna(False)
+)
+suggestions.duplicate = suggestions.duplicate.apply(
+    lambda x: False if pd.isna(x) else x
+)
+suggestions = suggestions.sort_values(
+    by=["left", "prediction"], ascending=[True, False]
+)
 
 suggestions
 ```

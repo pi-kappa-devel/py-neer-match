@@ -15,6 +15,7 @@ from neer_match.metrics import (
     MCCMetric,
 )
 
+import heapq
 import pandas as pd
 import tensorflow as tf
 import typing
@@ -40,18 +41,27 @@ def _suggest(
         batch_size=batch_size,
         shuffle=False,
     )
-    predictions = model.predict_from_generator(generator, **kwargs)[
-        : len(left) * len(right)
-    ]
-    sides = generator._DataGenerator__side_indices(generator.indices)
-    features = pd.DataFrame({"left": sides[0], "right": sides[1]})
-    suggestions = features.assign(prediction=predictions)
-    where = (
-        suggestions.groupby((features.index / right.shape[0]).astype(int))["prediction"]
-        .nlargest(count)
-        .index.get_level_values(1)
-    )
-    return suggestions.iloc[where]
+    top_suggestions = {i: [] for i in range(len(left))}
+
+    for batch_idx, batch in enumerate(generator):
+        batch_pred = model.predict_from_generator(batch, **kwargs)
+        for idx, pred in enumerate(batch_pred):
+            array_index = batch_idx * batch_size + idx
+            left_idx = array_index // len(right)
+            right_idx = array_index % len(right)
+            heapq.heappush(top_suggestions[left_idx], (float(pred), right_idx))
+            if len(top_suggestions[left_idx]) > count:
+                heapq.heappop(top_suggestions[left_idx])
+
+    rows, cols, preds = [], [], []
+    for left_idx, heap in top_suggestions.items():
+        for pred, right_idx in sorted(heap, reverse=True):
+            rows.append(left_idx)
+            cols.append(right_idx)
+            preds.append(pred)
+
+    suggestions = pd.DataFrame({"left": rows, "right": cols, "prediction": preds})
+    return suggestions
 
 
 def _evaluate_loop(
