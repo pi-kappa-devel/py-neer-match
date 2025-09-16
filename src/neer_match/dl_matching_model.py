@@ -107,7 +107,6 @@ class DLMatchingModel(tf.keras.Model):
                 F1Metric(name="f1", threshold=threshold),
                 MCCMetric(name="mcc", threshold=threshold),
             ]
-        print(metrics)
         super().compile(optimizer=optimizer, loss=loss, metrics=metrics, **kwargs)
 
     def fit(

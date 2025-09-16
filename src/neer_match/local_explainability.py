@@ -6,11 +6,9 @@ matching tasks.
 """
 
 from neer_match.data_generator import DataGenerator
-from neer_match.matching_model import (
-    _matching_model_or_raise,
-    DLMatchingModel,
-    NSMatchingModel,
-)
+from neer_match.matching_model import DLMatchingModel, NSMatchingModel
+from neer_match.matching_model_tools import _matching_model_or_raise
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
