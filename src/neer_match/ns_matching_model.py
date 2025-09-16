@@ -515,12 +515,11 @@ class NSMatchingModel(tf.keras.Model):
         Args:
             generator: The data generator.
         """
-        preds = self.record_pair_network(generator[0])
-        for i, features in enumerate(generator):
-            if i == 0:
-                continue
-            preds = tf.concat([preds, self.record_pair_network(features)], axis=0)
-        return preds.numpy()
+        if isinstance(generator, DataGenerator):
+            preds = self.record_pair_network(generator[0])
+        else:
+            preds = self.record_pair_network(generator)
+        return preds
 
     def predict(
         self, left: pd.DataFrame, right: pd.DataFrame, batch_size: int = 16
