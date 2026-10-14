@@ -339,6 +339,9 @@ class NSMatchingModel(tf.keras.Model):
                 trainable_variables,
                 verbose=verbose - 1,
             )
+            # As Keras does for the DL model: reshuffle the pairs, and redraw the
+            # sampled mismatches, before the next epoch
+            data_generator.on_epoch_end()
             if verbose > 0 and epoch % log_mod_n == 0:
                 print(self._training_loop_log_row(epoch, logs))
         if verbose > 0:
