@@ -117,6 +117,7 @@ class DLMatchingModel(tf.keras.Model):
         batch_size: int = 16,
         mismatch_share: float = 0.1,
         shuffle: bool = True,
+        validation_data=None,
         **kwargs,
     ) -> None:
         """Fit the model.
@@ -132,6 +133,12 @@ class DLMatchingModel(tf.keras.Model):
             batch_size: Batch size.
             mismatch_share: Mismatch share.
             shuffle: Shuffle flag.
+            validation_data: Data to score at the end of each epoch, as in
+                :func:`tensorflow.keras.Model.fit`: a (left, right, matches) tuple
+                of data frames, scored on all their record pairs, or anything that
+                method accepts, such as a :class:`DataGenerator`. Its loss and
+                metrics are logged with a ``val_`` prefix, so callbacks such as
+                EarlyStopping can monitor them.
             **kwargs: Additional keyword arguments passed to parent class
                       (:func:`tensorflow.keras.Model.fit`).
         """
@@ -145,13 +152,26 @@ class DLMatchingModel(tf.keras.Model):
             shuffle=shuffle,
         )
 
-        return super().fit(generator, **kwargs)
+        if (
+            isinstance(validation_data, (tuple, list))
+            and len(validation_data) == 3
+            and all(isinstance(frame, pd.DataFrame) for frame in validation_data)
+        ):
+            validation_data = DataGenerator(
+                self.record_pair_network.similarity_map,
+                *validation_data,
+                batch_size=batch_size,
+                mismatch_share=1.0,
+                shuffle=False,
+            )
+
+        return super().fit(generator, validation_data=validation_data, **kwargs)
 
     def evaluate(
         self,
-        left: pd.DataFrame,
-        right: pd.DataFrame,
-        matches: pd.DataFrame,
+        left: pd.DataFrame = None,
+        right: pd.DataFrame = None,
+        matches: pd.DataFrame = None,
         batch_size: int = 16,
         mismatch_share: float = 1.0,
         **kwargs,
@@ -160,7 +180,16 @@ class DLMatchingModel(tf.keras.Model):
         Evaluate the DL model with the same return structure as the NS model's
         custom loop (no axioms). Returns TP, FP, TN, FN, Accuracy, Precision,
         Recall, F1, MCC, and the training loss summed across batches.
+
+        Called without data frames, as :func:`tensorflow.keras.Model.evaluate`
+        -- which is how Keras itself scores validation_data during fit -- it
+        defers to that method.
         """
+        if not isinstance(left, pd.DataFrame):
+            # Keras calls evaluate(x=..., batch_size=..., ...). The data comes
+            # in as a generator, whose batches are already formed.
+            return super().evaluate(kwargs.pop("x", left), **kwargs)
+
         generator = DataGenerator(
             self.record_pair_network.similarity_map,
             left,
