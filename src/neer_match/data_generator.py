@@ -6,6 +6,7 @@ This module provides a data generation functionality for entity matching tasks.
 
 from neer_match.similarity_map import SimilarityMap
 from neer_match.similarity_encoding import SimilarityEncoder
+import functools
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -157,13 +158,19 @@ class DataGenerator(tf.keras.utils.Sequence):
         rpos = np.array([k % len(self.right) for k in indices], dtype=np.int32)
         return lpos, rpos
 
+    @functools.cached_property
+    def _match_pairs(self) -> typing.Set[typing.Tuple]:
+        """The (left, right) pairs in matches, for constant-time lookups."""
+        return set(zip(self.matches.left.tolist(), self.matches.right.tolist()))
+
     def __labels(self, lpos: np.ndarray, rpos: np.ndarray) -> np.ndarray:
         if self.matches is None:
             return None
-        labels = np.zeros((len(lpos)), dtype=np.float32)
-        for i, lp in enumerate(lpos):
-            labels[i] = any((self.matches.left == lp) & (self.matches.right == rpos[i]))
-        return labels
+        # A set lookup per pair, instead of comparing each pair with every match
+        return np.array(
+            [pair in self._match_pairs for pair in zip(lpos.tolist(), rpos.tolist())],
+            dtype=np.float32,
+        )
 
     def __len__(self) -> int:
         """Return the number of batches per epoch."""

@@ -10,6 +10,18 @@ import pandas
 import typing
 
 
+def _column_values(column: pandas.Series):
+    """Return a column's values, indexable by position like ``iloc``.
+
+    Each element is the same object ``iloc`` returns: a numpy scalar for numpy
+    dtypes, and the extension array's own element (e.g. ``pandas.NA``) for
+    extension dtypes, which ``to_numpy`` would convert.
+    """
+    if isinstance(column.dtype, numpy.dtype):
+        return column.to_numpy()
+    return column.array
+
+
 class SimilarityEncoder:
     """Similarity encoder class.
 
@@ -99,10 +111,14 @@ class SimilarityEncoder:
             vector.shape = (1, vector.shape[0])
             return vector
         else:
+            # Read each column once instead of looking up every value with
+            # iloc[i, j], which costs far more than the similarity calls
+            lvalues = [_column_values(lx.iloc[:, j]) for j in range(self.no_scalls)]
+            rvalues = [_column_values(rx.iloc[:, j]) for j in range(self.no_scalls)]
             return numpy.array(
                 [
                     [
-                        self.scalls[j](lx.iloc[i, j], rx.iloc[i, j])
+                        self.scalls[j](lvalues[j][i], rvalues[j][i])
                         for j in range(self.no_scalls)
                     ]
                     for i in range(lx.shape[0])
