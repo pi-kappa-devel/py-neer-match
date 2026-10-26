@@ -58,7 +58,9 @@ class DataGenerator(tf.keras.utils.Sequence):
             right: The right DataFrame.
             matches: The matches DataFrame.
             batch_size: Batch size.
-            mismatch_share: Mismatches share.
+            mismatch_share: Mismatches share. Below 1, the used mismatches are
+                drawn uniformly at random from all mismatching pairs, and drawn
+                anew at the end of each epoch if shuffle is set.
             shuffle: Shuffle flag.
         """
         if not isinstance(left, pd.DataFrame):
@@ -111,32 +113,40 @@ class DataGenerator(tf.keras.utils.Sequence):
         self.similarity_encoder = SimilarityEncoder(similarity_map)
 
         self.indices = self.__prepare_indices()
-
-        self.on_epoch_end()
+        if self.shuffle:
+            np.random.shuffle(self.indices)
 
     def __prepare_indices(self) -> np.ndarray:
         if self.no_used_mismatches_per_match is None:
             return np.arange(self.used_size, dtype=np.int32)
 
-        indices = np.array([], dtype=np.int32)
-        for i, (li, ri) in enumerate(self.matches.itertuples(index=False)):
-            indices = np.append(indices, li * len(self.right) + ri)
-        assert len(indices) == len(self.matches)
-        assert len(indices) <= self.used_size
-        for li in range(len(self.left)):
-            for ri in range(len(self.right)):
-                if any(
-                    (self.matches.iloc[:, 0] == li) & (self.matches.iloc[:, 1] == ri)
-                ):
-                    continue
-                indices = np.append(indices, li * len(self.right) + ri)
-                if len(indices) == self.used_size:
-                    break
-            if len(indices) == self.used_size:
-                break
+        lpos = self.matches.iloc[:, 0].to_numpy(dtype=np.int64)
+        rpos = self.matches.iloc[:, 1].to_numpy(dtype=np.int64)
+        match_indices = lpos * len(self.right) + rpos
+        indices = np.concatenate(
+            [match_indices, self.__sample_mismatches(match_indices)]
+        )
         assert len(indices) == self.used_size
 
         return indices
+
+    def __sample_mismatches(self, match_indices: np.ndarray) -> np.ndarray:
+        """Draw the used mismatches uniformly at random from all mismatching pairs.
+
+        Taking the first pairs in row order instead would draw every mismatch
+        from the first few left records. Candidates are drawn without
+        replacement, as many as needed plus the number of matches, so that
+        enough remain after the matches among them are removed. The draw is
+        seeded from numpy's global random state, so that numpy.random.seed and
+        keras.utils.set_random_seed make it reproducible.
+        """
+        no_mismatches = self.used_size - len(match_indices)
+        excluded = np.unique(match_indices)
+        rng = np.random.default_rng(np.random.randint(2**31))
+        candidates = rng.choice(
+            self.full_size, size=no_mismatches + len(excluded), replace=False
+        )
+        return candidates[~np.isin(candidates, excluded)][:no_mismatches]
 
     def no_pairs(self) -> int:
         """Return the number of record pairs."""
@@ -196,8 +206,15 @@ class DataGenerator(tf.keras.utils.Sequence):
         return features, labels
 
     def on_epoch_end(self) -> None:
-        """Maybe shuffle indices at the end of each epoch."""
+        """Maybe shuffle indices at the end of each epoch.
+
+        With shuffling enabled and only a share of the mismatches in use, the
+        used mismatches are also drawn anew, so that every epoch trains on a
+        different sample of them.
+        """
         if self.shuffle:
+            if self.no_used_mismatches_per_match is not None:
+                self.indices = self.__prepare_indices()
             np.random.shuffle(self.indices)
 
     def __str__(self) -> str:
